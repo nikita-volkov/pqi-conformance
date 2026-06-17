@@ -45,3 +45,12 @@ spec proxy =
         syncResult <- takeResult connection
         exited <- exitPipelineMode connection
         pure (entered, sent, synced, first, failed, aborted, syncResult, exited)
+
+    it "returns a sync result when called without prior commands" \conninfo ->
+      differential proxy conninfo \connection -> do
+        entered <- enterPipelineMode connection
+        synced <- pipelineSync connection
+        syncResult <- takeResult connection
+        trailing <- takeResult connection
+        exited <- exitPipelineMode connection
+        pure (entered, synced, syncResult, trailing, exited)

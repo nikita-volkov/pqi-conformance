@@ -7,7 +7,9 @@ module Pqi.Conformance.Operation.Connectdb
 where
 
 import Control.Exception (bracket)
+import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Char8 as ByteString.Char8
+import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
 import Pqi (IsConnection (..))
 import Pqi.Conformance.Harness
@@ -22,6 +24,13 @@ spec proxy = do
   describe "connectdb" do
     it "opens a usable connection" \conninfo ->
       differential proxy conninfo observeConnection
+
+    it "accepts a URI-format conninfo" \conninfo ->
+      differentialConnect proxy conninfo \(_ :: Proxy d) conninfo' -> do
+        connection <- connectdb (kvToUri conninfo') :: IO d
+        s <- status connection
+        finish connection
+        pure s
 
     it "rejects an unknown database" \conninfo ->
       differentialConnect proxy conninfo \(_ :: Proxy d) conninfo' -> do
@@ -42,8 +51,8 @@ spec proxy = do
     it "the candidate authenticates and queries like the FFI reference" \_ ->
       let scramConfig =
             TcPg.Config
-              { TcPg.forwardLogs = False,
-                TcPg.distro = TcPg.Distro17,
+              { TcPg.tagName = "postgres:17",
+                TcPg.forwardLogs = False,
                 TcPg.auth = TcPg.CredentialsAuth "scram" "secret"
               }
 
@@ -61,3 +70,26 @@ spec proxy = do
             native <- bracket (connectdb conninfo) finish (scramScenario @c)
             reference <- bracket (connectdb conninfo) finish (scramScenario @Reference)
             native `shouldBe` reference
+
+-- | Convert a @key=value@ conninfo to a @postgresql://@ URI, for testing
+-- that adapters accept URI-format connection strings.
+kvToUri :: ByteString -> ByteString
+kvToUri raw =
+  "postgresql://"
+    <> user
+    <> (if ByteString.null password then "" else ":" <> password)
+    <> (if ByteString.null user && ByteString.null password then "" else "@")
+    <> host
+    <> (if ByteString.null port then "" else ":" <> port)
+    <> (if ByteString.null dbname then "" else "/" <> dbname)
+  where
+    pairs = Map.fromList $ mapMaybe toPair (ByteString.Char8.words raw)
+    get k = Map.findWithDefault "" k pairs
+    toPair token = case ByteString.Char8.break (== '=') token of
+      (k, v) | not (ByteString.null v) -> Just (k, ByteString.drop 1 v)
+      _ -> Nothing
+    host = get "host"
+    port = get "port"
+    user = get "user"
+    password = get "password"
+    dbname = get "dbname"

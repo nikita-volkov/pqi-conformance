@@ -27,8 +27,8 @@ containerHook = aroundAll (TcPg.run config) . aroundWith withConninfo
   where
     config =
       TcPg.Config
-        { TcPg.forwardLogs = False,
-          TcPg.distro = TcPg.Distro17,
+        { TcPg.tagName = "postgres:17",
+          TcPg.forwardLogs = False,
           TcPg.auth = TcPg.TrustAuth
         }
     withConninfo action (host, port) = action (conninfo host port)
