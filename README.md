@@ -1,5 +1,8 @@
 # pqi-conformance
 
+[![Hackage](https://img.shields.io/hackage/v/pqi-conformance.svg)](https://hackage.haskell.org/package/pqi-conformance)
+[![Continuous Haddock](https://img.shields.io/badge/haddock-master-blue)](https://nikita-volkov.github.io/pqi-conformance/)
+
 A reusable [`hspec`](https://hackage.haskell.org/package/hspec) toolkit that
 checks any [`pqi`](https://github.com/nikita-volkov/pqi) adapter against the
 battle-tested [`postgresql-libpq`](https://hackage.haskell.org/package/postgresql-libpq)
