@@ -99,6 +99,7 @@ library
     Pqi.Conformance.Observation
     Pqi.Conformance.Operation.BackendPID
     Pqi.Conformance.Operation.Cancel
+    Pqi.Conformance.Operation.CancelCleanup
     Pqi.Conformance.Operation.ClientEncoding
     Pqi.Conformance.Operation.CmdStatus
     Pqi.Conformance.Operation.CmdTuples
