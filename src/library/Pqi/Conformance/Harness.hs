@@ -49,7 +49,7 @@ containerHook = aroundAll (TcPg.run config) . aroundWith withConninfo
 -- so tests are isolated even when the container is shared.
 differential ::
   forall c a.
-  (Eq a, Show a, IsConnection c) =>
+  (Eq a, Show a, IsConnection c, HasCallStack) =>
   Proxy c ->
   ByteString ->
   (forall c'. (IsConnection c') => c' -> IO a) ->
@@ -88,10 +88,10 @@ adminExec conninfo sql = do
 -- connection type (via 'Proxy'), and manages any connections it opens itself.
 differentialConnect ::
   forall c a.
-  (Eq a, Show a, IsConnection c) =>
+  (Eq a, Show a, IsConnection c, HasCallStack) =>
   Proxy c ->
   ByteString ->
-  (forall c'. (IsConnection c') => Proxy c' -> ByteString -> IO a) ->
+  (forall c'. (IsConnection c', HasCallStack) => Proxy c' -> ByteString -> IO a) ->
   Expectation
 differentialConnect proxy conninfo scenario = do
   candidate <- scenario proxy conninfo
