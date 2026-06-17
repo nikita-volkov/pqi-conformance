@@ -141,13 +141,13 @@ instance IsConnection Reference where
   loImport (Reference c) path = fmap fromOid <$> LibPQ.loImport c path
   loImportWithOid (Reference c) path oid = fmap fromOid <$> LibPQ.loImportWithOid c path (toOid oid)
   loExport (Reference c) oid path = LibPQ.loExport c (toOid oid) path
-  loOpen (Reference c) oid mode = fmap fromLoFd <$> LibPQ.loOpen c (toOid oid) mode
-  loWrite (Reference c) fd value = LibPQ.loWrite c (toLoFd fd) value
-  loRead (Reference c) fd len = LibPQ.loRead c (toLoFd fd) len
-  loSeek (Reference c) fd mode offset = LibPQ.loSeek c (toLoFd fd) mode offset
-  loTell (Reference c) fd = LibPQ.loTell c (toLoFd fd)
-  loTruncate (Reference c) fd len = LibPQ.loTruncate c (toLoFd fd) len
-  loClose (Reference c) fd = LibPQ.loClose c (toLoFd fd)
+  loOpen (Reference c) oid mode = fmap fromLibPQLoFd <$> LibPQ.loOpen c (toOid oid) mode
+  loWrite (Reference c) fd value = LibPQ.loWrite c (toLibPQLoFd fd) value
+  loRead (Reference c) fd len = LibPQ.loRead c (toLibPQLoFd fd) len
+  loSeek (Reference c) fd mode offset = LibPQ.loSeek c (toLibPQLoFd fd) mode offset
+  loTell (Reference c) fd = LibPQ.loTell c (toLibPQLoFd fd)
+  loTruncate (Reference c) fd len = LibPQ.loTruncate c (toLibPQLoFd fd) len
+  loClose (Reference c) fd = LibPQ.loClose c (toLibPQLoFd fd)
   loUnlink (Reference c) oid = LibPQ.loUnlink c (toOid oid)
 
   clientEncoding (Reference c) = LibPQ.clientEncoding c
@@ -181,11 +181,11 @@ toColumn = LibPQ.toColumn
 fromColumn :: LibPQ.Column -> Int32
 fromColumn = fromIntegral . fromEnum
 
-toLoFd :: Pqi.LoFd -> LibPQ.LoFd
-toLoFd (Pqi.LoFd fd) = LibPQ.LoFd (fromIntegral fd)
+toLibPQLoFd :: Int32 -> LibPQ.LoFd
+toLibPQLoFd = LibPQ.LoFd . fromIntegral
 
-fromLoFd :: LibPQ.LoFd -> Pqi.LoFd
-fromLoFd (LibPQ.LoFd fd) = Pqi.LoFd (fromIntegral fd)
+fromLibPQLoFd :: LibPQ.LoFd -> Int32
+fromLibPQLoFd (LibPQ.LoFd fd) = fromIntegral fd
 
 fromNotify :: LibPQ.Notify -> Pqi.Notify
 fromNotify notification =
