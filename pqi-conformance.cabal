@@ -99,7 +99,8 @@ library
     Pqi.Conformance.Observation
     Pqi.Conformance.Operation.BackendPID
     Pqi.Conformance.Operation.Cancel
-    Pqi.Conformance.Operation.CancelCleanup
+    Pqi.Conformance.Operation.Cancel.Cleanup
+    Pqi.Conformance.Operation.Cancel.Stale
     Pqi.Conformance.Operation.ClientEncoding
     Pqi.Conformance.Operation.CmdStatus
     Pqi.Conformance.Operation.CmdTuples
@@ -193,7 +194,6 @@ library
     Pqi.Conformance.Operation.Setnonblocking
     Pqi.Conformance.Operation.SetSingleRowMode
     Pqi.Conformance.Operation.Socket
-    Pqi.Conformance.Operation.StaleCancel
     Pqi.Conformance.Operation.Status
     Pqi.Conformance.Operation.TransactionStatus
     Pqi.Conformance.Operation.UnsafeFreeResult

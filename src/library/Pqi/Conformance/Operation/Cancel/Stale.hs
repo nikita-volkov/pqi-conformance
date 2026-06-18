@@ -26,7 +26,7 @@
 -- On the buggy implementation at least one iteration reliably loses the race
 -- and reports @57014@ on the victim query; the fixed implementation passes
 -- every iteration.
-module Pqi.Conformance.Operation.StaleCancel
+module Pqi.Conformance.Operation.Cancel.Stale
   ( spec,
   )
 where

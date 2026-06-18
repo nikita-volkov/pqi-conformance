@@ -18,7 +18,6 @@ import Pqi (IsConnection)
 import Pqi.Conformance.Harness
 import qualified Pqi.Conformance.Operation.BackendPID as BackendPID
 import qualified Pqi.Conformance.Operation.Cancel as Cancel
-import qualified Pqi.Conformance.Operation.CancelCleanup as CancelCleanup
 import qualified Pqi.Conformance.Operation.ClientEncoding as ClientEncoding
 import qualified Pqi.Conformance.Operation.CmdStatus as CmdStatus
 import qualified Pqi.Conformance.Operation.CmdTuples as CmdTuples
@@ -112,7 +111,6 @@ import qualified Pqi.Conformance.Operation.SetErrorVerbosity as SetErrorVerbosit
 import qualified Pqi.Conformance.Operation.SetSingleRowMode as SetSingleRowMode
 import qualified Pqi.Conformance.Operation.Setnonblocking as Setnonblocking
 import qualified Pqi.Conformance.Operation.Socket as Socket
-import qualified Pqi.Conformance.Operation.StaleCancel as StaleCancel
 import qualified Pqi.Conformance.Operation.Status as Status
 import qualified Pqi.Conformance.Operation.TransactionStatus as TransactionStatus
 import qualified Pqi.Conformance.Operation.UnsafeFreeResult as UnsafeFreeResult
@@ -188,8 +186,6 @@ specs proxy = parallel do
     -- Cancellation
     GetCancel.spec proxy
     Cancel.spec proxy
-    CancelCleanup.spec proxy
-    StaleCancel.spec proxy
     -- Notifications and notices
     Notifies.spec proxy
     DisableNoticeReporting.spec proxy

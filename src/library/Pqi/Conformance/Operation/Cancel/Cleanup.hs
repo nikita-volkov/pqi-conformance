@@ -9,7 +9,7 @@
 -- query has already finished.  The server receives the signal, sets
 -- @QueryCancelPending@, and the __next__ command (e.g. @ABORT@) is cancelled
 -- with SQLSTATE @57014@, leaving the connection unusable.
-module Pqi.Conformance.Operation.CancelCleanup
+module Pqi.Conformance.Operation.Cancel.Cleanup
   ( spec,
   )
 where
