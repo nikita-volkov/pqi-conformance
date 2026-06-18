@@ -11,10 +11,10 @@ where
 
 import Pqi (IsCancel (..), IsConnection (..))
 import Pqi.Conformance.Harness
-import Pqi.Conformance.Prelude
-import Pqi.Conformance.Scenario (drainResults, execScenario)
 import qualified Pqi.Conformance.Operation.Cancel.Cleanup as Cleanup
 import qualified Pqi.Conformance.Operation.Cancel.Stale as Stale
+import Pqi.Conformance.Prelude
+import Pqi.Conformance.Scenario (drainResults, execScenario)
 import Test.Hspec
 
 spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
