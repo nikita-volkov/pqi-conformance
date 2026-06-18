@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name: pqi-conformance
-version: 0.0.1.0
+version: 0.0.1.1
 category: Database, PostgreSQL, Testing
 synopsis: Differential conformance tests for pqi adapters
 description:
