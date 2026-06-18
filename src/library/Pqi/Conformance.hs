@@ -112,6 +112,7 @@ import qualified Pqi.Conformance.Operation.SetErrorVerbosity as SetErrorVerbosit
 import qualified Pqi.Conformance.Operation.SetSingleRowMode as SetSingleRowMode
 import qualified Pqi.Conformance.Operation.Setnonblocking as Setnonblocking
 import qualified Pqi.Conformance.Operation.Socket as Socket
+import qualified Pqi.Conformance.Operation.StaleCancel as StaleCancel
 import qualified Pqi.Conformance.Operation.Status as Status
 import qualified Pqi.Conformance.Operation.TransactionStatus as TransactionStatus
 import qualified Pqi.Conformance.Operation.UnsafeFreeResult as UnsafeFreeResult
@@ -188,6 +189,7 @@ specs proxy = parallel do
     GetCancel.spec proxy
     Cancel.spec proxy
     CancelCleanup.spec proxy
+    StaleCancel.spec proxy
     -- Notifications and notices
     Notifies.spec proxy
     DisableNoticeReporting.spec proxy

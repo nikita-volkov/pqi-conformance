@@ -193,6 +193,7 @@ library
     Pqi.Conformance.Operation.Setnonblocking
     Pqi.Conformance.Operation.SetSingleRowMode
     Pqi.Conformance.Operation.Socket
+    Pqi.Conformance.Operation.StaleCancel
     Pqi.Conformance.Operation.Status
     Pqi.Conformance.Operation.TransactionStatus
     Pqi.Conformance.Operation.UnsafeFreeResult
