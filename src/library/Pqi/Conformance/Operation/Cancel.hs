@@ -32,3 +32,15 @@ spec proxy =
         results <- drainResults connection
         usable <- execScenario "select 1" connection
         pure (sent, cancelled, results, usable)
+
+    it "leaves the connection usable after cancelling a short-running query" \conninfo ->
+      differential proxy conninfo \connection -> do
+        outcomes <- replicateM 3 do
+          sent <- sendQuery connection "select pg_sleep(0.1)"
+          threadDelay 50000
+          handle <- getCancel connection
+          cancelled <- for handle cancel
+          results <- drainResults connection
+          usable <- execScenario "select 1" connection
+          pure (sent, cancelled, results, usable)
+        pure outcomes
