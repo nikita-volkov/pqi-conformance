@@ -4,15 +4,9 @@ version: 0.0.1.0
 category: Database, PostgreSQL, Testing
 synopsis: Differential conformance tests for pqi adapters
 description:
-  A reusable @hspec@ toolkit that checks any @pqi@ 'Pqi.IsConnection'
-  adapter against the FFI reference adapter. It boots a throwaway PostgreSQL
-  container (via @testcontainers@), runs the same operation on the candidate and
-  the FFI connection, and asserts that the protocol-derived observations match.
+  A reusable [@hspec@](https://hackage.haskell.org/package/hspec) toolkit that checks any [@pqi@](https://hackage.haskell.org/package/pqi) 'Pqi.IsConnection' adapter against the FFI reference adapter. It boots a throwaway PostgreSQL container (via [@testcontainers@](https://hackage.haskell.org/package/testcontainers)), runs the same operation on the candidate and the FFI connection, and asserts that the protocol-derived observations match.
 
-  .
-
-  Each adapter's own test suite reuses these spec builders, wiring itself in as
-  the candidate.
+  Each adapter's own test suite reuses these spec builders, wiring itself in as the candidate.
 
 homepage: https://github.com/nikita-volkov/pqi-conformance
 bug-reports: https://github.com/nikita-volkov/pqi-conformance/issues
