@@ -47,6 +47,15 @@ spec proxy = do
         finish connection
         pure observation
 
+    it "defaults the user like the reference when user is omitted" \conninfo ->
+      differentialConnect proxy conninfo \(_ :: Proxy d) conninfo' -> do
+        connection <- connectdb (dropUser conninfo') :: IO d
+        resolvedUser <- user connection
+        observedStatus <- status connection
+        observedError <- errorMessage connection
+        finish connection
+        pure (resolvedUser, observedStatus, observedError)
+
   describe "SCRAM-SHA-256 authentication" do
     it "the candidate authenticates and queries like the FFI reference" \_ ->
       let scramConfig =
@@ -70,6 +79,15 @@ spec proxy = do
             native <- bracket (connectdb conninfo) finish (scramScenario @c)
             reference <- bracket (connectdb conninfo) finish (scramScenario @Reference)
             native `shouldBe` reference
+
+-- | Drop the @user=…@ token from a @key=value@ conninfo, leaving the user
+-- unspecified so the adapter must apply its own default. libpq derives the
+-- default from the operating-system login name; an adapter that hardcodes a
+-- different default (e.g. @postgres@) diverges here.
+dropUser :: ByteString -> ByteString
+dropUser raw =
+  ByteString.Char8.unwords
+    (filter (not . ("user=" `ByteString.isPrefixOf`)) (ByteString.Char8.words raw))
 
 -- | Convert a @key=value@ conninfo to a @postgresql://@ URI, for testing
 -- that adapters accept URI-format connection strings.
