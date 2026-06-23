@@ -8,6 +8,7 @@ where
 import Pqi (IsConnection (..))
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
+import qualified Pqi.Conformance.Operation.PipelineSync.Parity as Parity
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (takeCommandResults, takeResult)
 import Test.Hspec
@@ -15,6 +16,7 @@ import Test.Hspec
 spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
 spec proxy =
   describe "pipelineSync" do
+    Parity.spec proxy
     it "collects pipelined queries per sync" \conninfo ->
       differential proxy conninfo \connection -> do
         entered <- enterPipelineMode connection
