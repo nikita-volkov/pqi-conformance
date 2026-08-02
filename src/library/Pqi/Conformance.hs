@@ -113,6 +113,7 @@ import qualified Pqi.Conformance.Operation.Setnonblocking as Setnonblocking
 import qualified Pqi.Conformance.Operation.Socket as Socket
 import qualified Pqi.Conformance.Operation.Status as Status
 import qualified Pqi.Conformance.Operation.TransactionStatus as TransactionStatus
+import qualified Pqi.Conformance.Operation.UnescapeBytea as UnescapeBytea
 import qualified Pqi.Conformance.Operation.UnsafeFreeResult as UnsafeFreeResult
 import qualified Pqi.Conformance.Operation.User as User
 import Pqi.Conformance.Prelude
@@ -163,6 +164,7 @@ specs adapter = parallel do
     EscapeStringConn.spec adapter
     EscapeByteaConn.spec adapter
     EscapeIdentifier.spec adapter
+    UnescapeBytea.spec adapter
     -- Asynchronous command processing
     SendQuery.spec adapter
     SendQueryParams.spec adapter

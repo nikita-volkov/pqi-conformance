@@ -19,7 +19,8 @@ adapter =
     { Pqi.name = "postgresql-libpq (reference)",
       Pqi.connectdb = \conninfo -> mkConnection <$> LibPQ.connectdb conninfo,
       Pqi.connectStart = \conninfo -> mkConnection <$> LibPQ.connectStart conninfo,
-      Pqi.newNullConnection = mkConnection <$> LibPQ.newNullConnection
+      Pqi.newNullConnection = mkConnection <$> LibPQ.newNullConnection,
+      Pqi.unescapeBytea = \input -> LibPQ.unescapeBytea input
     }
 
 -- | Build a 'Pqi.Connection' whose fields close over the given

@@ -191,6 +191,7 @@ library
     Pqi.Conformance.Operation.Socket
     Pqi.Conformance.Operation.Status
     Pqi.Conformance.Operation.TransactionStatus
+    Pqi.Conformance.Operation.UnescapeBytea
     Pqi.Conformance.Operation.UnsafeFreeResult
     Pqi.Conformance.Operation.User
     Pqi.Conformance.Prelude
