@@ -5,19 +5,19 @@ module Pqi.Conformance.Operation.SetClientEncoding
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (execScenario)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "setClientEncoding" do
     it "rejects an unknown encoding and leaves the session usable" \conninfo ->
-      differential proxy conninfo \connection -> do
-        rejected <- setClientEncoding connection "BOGUS_ENCODING"
-        unchanged <- clientEncoding connection
-        stillIdle <- transactionStatus connection
+      differential adapter conninfo \connection -> do
+        rejected <- connection.setClientEncoding "BOGUS_ENCODING"
+        unchanged <- connection.clientEncoding
+        stillIdle <- connection.transactionStatus
         stillWorks <- execScenario "select 1" connection
         pure (rejected, unchanged, stillIdle, stillWorks)

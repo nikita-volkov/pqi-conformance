@@ -10,17 +10,17 @@ module Pqi.Conformance.Operation.UnsafeFreeResult
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (execScenario)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "unsafeFreeResult" do
     it "leaves the connection usable" \conninfo ->
-      differential proxy conninfo \connection -> do
-        result <- exec connection "select 1"
-        traverse_ unsafeFreeResult result
+      differential adapter conninfo \connection -> do
+        result <- connection.exec "select 1"
+        traverse_ (.unsafeFreeResult) result
         execScenario "select 2" connection

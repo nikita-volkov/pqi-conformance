@@ -5,19 +5,19 @@ module Pqi.Conformance.Operation.ResetPoll
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (pollUntilDone)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "resetPoll" do
     it "reaches a terminal polling status and a ready connection" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- exec connection "begin"
-        started <- resetStart connection
-        terminal <- pollUntilDone (resetPoll connection)
-        afterStatus <- transactionStatus connection
+      differential adapter conninfo \connection -> do
+        _ <- connection.exec "begin"
+        started <- connection.resetStart
+        terminal <- pollUntilDone connection.resetPoll
+        afterStatus <- connection.transactionStatus
         pure (started, terminal, afterStatus)

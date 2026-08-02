@@ -5,18 +5,18 @@ module Pqi.Conformance.Operation.SetErrorVerbosity
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "setErrorVerbosity" do
     it "returns the previous setting" \conninfo ->
-      differential proxy conninfo \connection -> do
-        beforeTerse <- setErrorVerbosity connection Lq.ErrorsTerse
-        beforeVerbose <- setErrorVerbosity connection Lq.ErrorsVerbose
-        beforeDefault <- setErrorVerbosity connection Lq.ErrorsDefault
+      differential adapter conninfo \connection -> do
+        beforeTerse <- connection.setErrorVerbosity Lq.ErrorsTerse
+        beforeVerbose <- connection.setErrorVerbosity Lq.ErrorsVerbose
+        beforeDefault <- connection.setErrorVerbosity Lq.ErrorsDefault
         pure (beforeTerse, beforeVerbose, beforeDefault)

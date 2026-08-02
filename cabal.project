@@ -1,0 +1,6 @@
+packages: .
+
+source-repository-package
+  type: git
+  location: https://github.com/nikita-volkov/pqi
+  tag: f64d3264cc0ab9145bb8568588e33bb76eeb0fe7

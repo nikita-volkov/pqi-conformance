@@ -5,21 +5,21 @@ module Pqi.Conformance.Operation.ParameterStatus
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "parameterStatus" do
     it "reports parameter statuses, including GUC_REPORT updates" \conninfo ->
-      differential proxy conninfo \connection -> do
-        before <- parameterStatus connection "application_name"
-        _ <- exec connection "set application_name to 'pqi-conformance'"
-        after <- parameterStatus connection "application_name"
-        clientEncoding <- parameterStatus connection "client_encoding"
-        standardConformingStrings <- parameterStatus connection "standard_conforming_strings"
-        integerDatetimes <- parameterStatus connection "integer_datetimes"
-        missing <- parameterStatus connection "no_such_parameter"
+      differential adapter conninfo \connection -> do
+        before <- connection.parameterStatus "application_name"
+        _ <- connection.exec "set application_name to 'pqi-conformance'"
+        after <- connection.parameterStatus "application_name"
+        clientEncoding <- connection.parameterStatus "client_encoding"
+        standardConformingStrings <- connection.parameterStatus "standard_conforming_strings"
+        integerDatetimes <- connection.parameterStatus "integer_datetimes"
+        missing <- connection.parameterStatus "no_such_parameter"
         pure (before, after, clientEncoding, standardConformingStrings, integerDatetimes, missing)

@@ -5,13 +5,13 @@ module Pqi.Conformance.Operation.ConnectionNeedsPassword
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "connectionNeedsPassword" do
     it "reports whether a password was needed" \conninfo ->
-      differential proxy conninfo connectionNeedsPassword
+      differential adapter conninfo (.connectionNeedsPassword)

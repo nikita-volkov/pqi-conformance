@@ -5,21 +5,21 @@ module Pqi.Conformance.Operation.TransactionStatus
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "transactionStatus" do
     it "tracks status through a transaction" \conninfo ->
-      differential proxy conninfo \connection -> do
-        idle <- transactionStatus connection
-        _ <- exec connection "begin"
-        inTransaction <- transactionStatus connection
-        _ <- exec connection "select 1 / 0"
-        inError <- transactionStatus connection
-        _ <- exec connection "rollback"
-        afterRollback <- transactionStatus connection
+      differential adapter conninfo \connection -> do
+        idle <- connection.transactionStatus
+        _ <- connection.exec "begin"
+        inTransaction <- connection.transactionStatus
+        _ <- connection.exec "select 1 / 0"
+        inError <- connection.transactionStatus
+        _ <- connection.exec "rollback"
+        afterRollback <- connection.transactionStatus
         pure (idle, inTransaction, inError, afterRollback)

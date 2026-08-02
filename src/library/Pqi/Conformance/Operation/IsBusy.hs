@@ -5,22 +5,22 @@ module Pqi.Conformance.Operation.IsBusy
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (drainResults)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "isBusy" do
     it "settles to not-busy after the result arrives" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- sendQuery connection "select 42"
-        let settle (0 :: Int) = isBusy connection
+      differential adapter conninfo \connection -> do
+        _ <- connection.sendQuery "select 42"
+        let settle (0 :: Int) = connection.isBusy
             settle n = do
-              _ <- consumeInput connection
-              busy <- isBusy connection
+              _ <- connection.consumeInput
+              busy <- connection.isBusy
               if busy then threadDelay 1000 >> settle (n - 1) else pure busy
         stillBusy <- settle 10000
         _ <- drainResults connection

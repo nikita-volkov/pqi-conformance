@@ -5,17 +5,17 @@ module Pqi.Conformance.Operation.GetCopyData
   )
 where
 
-import Pqi (IsConnection)
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (collectCopyOut, drainResults, execScenario)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "getCopyData" do
     let copyOut sql conninfo =
-          differential proxy conninfo \connection -> do
+          differential adapter conninfo \connection -> do
             started <- execScenario sql connection
             rows <- collectCopyOut connection
             outcome <- drainResults connection

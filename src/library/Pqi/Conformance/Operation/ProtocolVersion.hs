@@ -5,13 +5,13 @@ module Pqi.Conformance.Operation.ProtocolVersion
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "protocolVersion" do
     it "reports the protocol version" \conninfo ->
-      differential proxy conninfo protocolVersion
+      differential adapter conninfo (.protocolVersion)

@@ -5,20 +5,20 @@ module Pqi.Conformance.Operation.IsNullConnection
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "isNullConnection" do
     it "is True for the null sentinel and False for an open connection" \conninfo ->
-      differentialConnect proxy conninfo \(_ :: Proxy c) conninfo' -> do
-        nullConn <- newNullConnection :: IO c
-        let nullIsNull = isNullConnection nullConn
-        finish nullConn
-        openConn <- connectdb conninfo' :: IO c
-        let openIsNull = isNullConnection openConn
-        finish openConn
+      differentialConnect adapter conninfo \adapter' conninfo' -> do
+        nullConn <- adapter'.newNullConnection
+        let nullIsNull = nullConn.isNullConnection
+        nullConn.finish
+        openConn <- adapter'.connectdb conninfo'
+        let openIsNull = openConn.isNullConnection
+        openConn.finish
         pure (nullIsNull, openIsNull)

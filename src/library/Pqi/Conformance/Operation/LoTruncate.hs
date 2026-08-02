@@ -5,28 +5,28 @@ module Pqi.Conformance.Operation.LoTruncate
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (inTransaction)
 import System.IO (IOMode (..), SeekMode (..))
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "loTruncate" do
     it "truncates to a new size" \conninfo ->
-      differential proxy conninfo \connection ->
+      differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- loCreat connection
+          oid <- connection.loCreat
           outcome <- for oid \o -> do
-            fd <- loOpen connection o ReadWriteMode
+            fd <- connection.loOpen o ReadWriteMode
             result <- for fd \f -> do
-              _ <- loWrite connection f "hello, large object"
-              truncated <- loTruncate connection f 5
-              newEnd <- loSeek connection f SeekFromEnd 0
+              _ <- connection.loWrite f "hello, large object"
+              truncated <- connection.loTruncate f 5
+              newEnd <- connection.loSeek f SeekFromEnd 0
               pure (truncated, newEnd)
-            traverse_ (loClose connection) fd
+            traverse_ connection.loClose fd
             pure result
-          traverse_ (loUnlink connection) oid
+          traverse_ connection.loUnlink oid
           pure outcome

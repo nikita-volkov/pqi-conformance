@@ -8,17 +8,17 @@ module Pqi.Conformance.Operation.Ftable
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "ftable" do
     it "reports the source-table OID, or none for a computed column" \conninfo ->
-      differential proxy conninfo \connection -> do
-        result <- exec connection "select relname, relkind, 1 as computed from pg_catalog.pg_class where false"
+      differential adapter conninfo \connection -> do
+        result <- connection.exec "select relname, relkind, 1 as computed from pg_catalog.pg_class where false"
         for result \r -> do
-          n <- nfields r
-          traverse (ftable r) [0 .. n - 1]
+          n <- r.nfields
+          traverse r.ftable [0 .. n - 1]

@@ -6,28 +6,28 @@ module Pqi.Conformance.Operation.PipelineStatus
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (takeCommandResults, takeResult)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "pipelineStatus" do
     it "reports off, on, aborted, and recovery" \conninfo ->
-      differential proxy conninfo \connection -> do
-        off <- pipelineStatus connection
-        _ <- enterPipelineMode connection
-        on <- pipelineStatus connection
-        _ <- traverse (\sql -> sendQueryParams connection sql [] Lq.Text) ["select 1", "select 1 / 0", "select 3"]
-        _ <- pipelineSync connection
+      differential adapter conninfo \connection -> do
+        off <- connection.pipelineStatus
+        _ <- connection.enterPipelineMode
+        on <- connection.pipelineStatus
+        _ <- traverse (\sql -> connection.sendQueryParams sql [] Lq.Text) ["select 1", "select 1 / 0", "select 3"]
+        _ <- connection.pipelineSync
         _ <- takeCommandResults connection
         _ <- takeCommandResults connection
-        aborted <- pipelineStatus connection
+        aborted <- connection.pipelineStatus
         _ <- takeCommandResults connection
         _ <- takeResult connection
-        recovered <- pipelineStatus connection
-        _ <- exitPipelineMode connection
+        recovered <- connection.pipelineStatus
+        _ <- connection.exitPipelineMode
         pure (off, on, aborted, recovered)

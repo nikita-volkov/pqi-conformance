@@ -5,29 +5,29 @@ module Pqi.Conformance.Operation.LoTell
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (inTransaction)
 import System.IO (IOMode (..), SeekMode (..))
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "loTell" do
     it "reports the position after a write and a seek" \conninfo ->
-      differential proxy conninfo \connection ->
+      differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- loCreat connection
+          oid <- connection.loCreat
           outcome <- for oid \o -> do
-            fd <- loOpen connection o ReadWriteMode
+            fd <- connection.loOpen o ReadWriteMode
             positions <- for fd \f -> do
-              _ <- loWrite connection f "hello, large object"
-              afterWrite <- loTell connection f
-              _ <- loSeek connection f AbsoluteSeek 3
-              afterSeek <- loTell connection f
+              _ <- connection.loWrite f "hello, large object"
+              afterWrite <- connection.loTell f
+              _ <- connection.loSeek f AbsoluteSeek 3
+              afterSeek <- connection.loTell f
               pure (afterWrite, afterSeek)
-            traverse_ (loClose connection) fd
+            traverse_ connection.loClose fd
             pure positions
-          traverse_ (loUnlink connection) oid
+          traverse_ connection.loUnlink oid
           pure outcome

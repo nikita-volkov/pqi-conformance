@@ -1,11 +1,11 @@
 -- | A reusable differential-testing toolkit for @pqi@ adapters.
 --
--- An adapter's test suite calls 'specs' with a @'Proxy' \@MyConnection@. The
+-- An adapter's test suite calls 'specs' with its 'Pqi.Adapter' value. The
 -- battery runs the same operation on the candidate and on the FFI reference
 -- and asserts that the protocol-derived observations match.
 --
 -- The throwaway PostgreSQL container lifecycle is baked into 'specs', so
--- adapter test suites only need @hspec (specs (Proxy \@MyConnection))@; they
+-- adapter test suites only need @hspec (specs MyAdapter.adapter)@; they
 -- don't have to know about @testcontainers@ at all. The SCRAM-SHA-256
 -- authentication spec is part of the @connectdb@ group and boots its own
 -- password-auth container.
@@ -14,7 +14,7 @@ module Pqi.Conformance
   )
 where
 
-import Pqi (IsConnection)
+import qualified Pqi
 import Pqi.Conformance.Harness
 import qualified Pqi.Conformance.Operation.BackendPID as BackendPID
 import qualified Pqi.Conformance.Operation.Cancel as Cancel
@@ -122,117 +122,117 @@ import Test.Hspec
 -- trust-auth container, plus SCRAM-SHA-256 authentication (which boots its own
 -- password-auth container). Every operation spec is differential against the
 -- FFI reference.
-specs :: (IsConnection c) => Proxy c -> Spec
-specs proxy = parallel do
+specs :: Pqi.Adapter -> Spec
+specs adapter = parallel do
   containerHook do
     -- Connection lifecycle
-    Connectdb.spec proxy
-    ConnectStart.spec proxy
-    ConnectPoll.spec proxy
-    NewNullConnection.spec proxy
-    IsNullConnection.spec proxy
-    Finish.spec proxy
-    Reset.spec proxy
-    ResetStart.spec proxy
-    ResetPoll.spec proxy
+    Connectdb.spec adapter
+    ConnectStart.spec adapter
+    ConnectPoll.spec adapter
+    NewNullConnection.spec adapter
+    IsNullConnection.spec adapter
+    Finish.spec adapter
+    Reset.spec adapter
+    ResetStart.spec adapter
+    ResetPoll.spec adapter
     -- Connection information accessors
-    Db.spec proxy
-    User.spec proxy
-    Pass.spec proxy
-    Host.spec proxy
-    Port.spec proxy
-    Options.spec proxy
-    Status.spec proxy
-    TransactionStatus.spec proxy
-    ParameterStatus.spec proxy
-    ProtocolVersion.spec proxy
-    ServerVersion.spec proxy
-    ErrorMessage.spec proxy
-    Socket.spec proxy
-    BackendPID.spec proxy
-    ConnectionNeedsPassword.spec proxy
-    ConnectionUsedPassword.spec proxy
+    Db.spec adapter
+    User.spec adapter
+    Pass.spec adapter
+    Host.spec adapter
+    Port.spec adapter
+    Options.spec adapter
+    Status.spec adapter
+    TransactionStatus.spec adapter
+    ParameterStatus.spec adapter
+    ProtocolVersion.spec adapter
+    ServerVersion.spec adapter
+    ErrorMessage.spec adapter
+    Socket.spec adapter
+    BackendPID.spec adapter
+    ConnectionNeedsPassword.spec adapter
+    ConnectionUsedPassword.spec adapter
     -- Querying
-    Exec.spec proxy
-    ExecParams.spec proxy
-    Prepare.spec proxy
-    ExecPrepared.spec proxy
-    DescribePrepared.spec proxy
-    DescribePortal.spec proxy
+    Exec.spec adapter
+    ExecParams.spec adapter
+    Prepare.spec adapter
+    ExecPrepared.spec adapter
+    DescribePrepared.spec adapter
+    DescribePortal.spec adapter
     -- Escaping
-    EscapeStringConn.spec proxy
-    EscapeByteaConn.spec proxy
-    EscapeIdentifier.spec proxy
+    EscapeStringConn.spec adapter
+    EscapeByteaConn.spec adapter
+    EscapeIdentifier.spec adapter
     -- Asynchronous command processing
-    SendQuery.spec proxy
-    SendQueryParams.spec proxy
-    SendPrepare.spec proxy
-    SendQueryPrepared.spec proxy
-    SendDescribePrepared.spec proxy
-    SendDescribePortal.spec proxy
-    GetResult.spec proxy
-    ConsumeInput.spec proxy
-    IsBusy.spec proxy
-    Setnonblocking.spec proxy
-    Isnonblocking.spec proxy
-    SetSingleRowMode.spec proxy
-    Flush.spec proxy
+    SendQuery.spec adapter
+    SendQueryParams.spec adapter
+    SendPrepare.spec adapter
+    SendQueryPrepared.spec adapter
+    SendDescribePrepared.spec adapter
+    SendDescribePortal.spec adapter
+    GetResult.spec adapter
+    ConsumeInput.spec adapter
+    IsBusy.spec adapter
+    Setnonblocking.spec adapter
+    Isnonblocking.spec adapter
+    SetSingleRowMode.spec adapter
+    Flush.spec adapter
     -- Pipelining
-    PipelineStatus.spec proxy
-    EnterPipelineMode.spec proxy
-    ExitPipelineMode.spec proxy
-    PipelineSync.spec proxy
-    SendFlushRequest.spec proxy
+    PipelineStatus.spec adapter
+    EnterPipelineMode.spec adapter
+    ExitPipelineMode.spec adapter
+    PipelineSync.spec adapter
+    SendFlushRequest.spec adapter
     -- Cancellation
-    GetCancel.spec proxy
-    Cancel.spec proxy
+    GetCancel.spec adapter
+    Cancel.spec adapter
     -- Notifications and notices
-    Notifies.spec proxy
-    DisableNoticeReporting.spec proxy
-    EnableNoticeReporting.spec proxy
-    GetNotice.spec proxy
+    Notifies.spec adapter
+    DisableNoticeReporting.spec adapter
+    EnableNoticeReporting.spec adapter
+    GetNotice.spec adapter
     -- Copy sub-protocol
-    PutCopyData.spec proxy
-    PutCopyEnd.spec proxy
-    GetCopyData.spec proxy
+    PutCopyData.spec adapter
+    PutCopyEnd.spec adapter
+    GetCopyData.spec adapter
     -- Large objects
-    LoCreat.spec proxy
-    LoCreate.spec proxy
-    LoImport.spec proxy
-    LoImportWithOid.spec proxy
-    LoExport.spec proxy
-    LoOpen.spec proxy
-    LoWrite.spec proxy
-    LoRead.spec proxy
-    LoSeek.spec proxy
-    LoTell.spec proxy
-    LoTruncate.spec proxy
-    LoClose.spec proxy
-    LoUnlink.spec proxy
+    LoCreat.spec adapter
+    LoCreate.spec adapter
+    LoImport.spec adapter
+    LoImportWithOid.spec adapter
+    LoExport.spec adapter
+    LoOpen.spec adapter
+    LoWrite.spec adapter
+    LoRead.spec adapter
+    LoSeek.spec adapter
+    LoTell.spec adapter
+    LoTruncate.spec adapter
+    LoClose.spec adapter
+    LoUnlink.spec adapter
     -- Connection control
-    ClientEncoding.spec proxy
-    SetClientEncoding.spec proxy
-    SetErrorVerbosity.spec proxy
+    ClientEncoding.spec adapter
+    SetClientEncoding.spec adapter
+    SetErrorVerbosity.spec adapter
     -- Result inspection
-    ResultStatus.spec proxy
-    ResultErrorMessage.spec proxy
-    ResultErrorField.spec proxy
-    UnsafeFreeResult.spec proxy
-    Ntuples.spec proxy
-    Nfields.spec proxy
-    Fname.spec proxy
-    Fnumber.spec proxy
-    Ftable.spec proxy
-    Ftablecol.spec proxy
-    Fformat.spec proxy
-    Ftype.spec proxy
-    Fmod.spec proxy
-    Fsize.spec proxy
-    Getvalue.spec proxy
-    GetvalueCopy.spec proxy
-    Getisnull.spec proxy
-    Getlength.spec proxy
-    Nparams.spec proxy
-    Paramtype.spec proxy
-    CmdStatus.spec proxy
-    CmdTuples.spec proxy
+    ResultStatus.spec adapter
+    ResultErrorMessage.spec adapter
+    ResultErrorField.spec adapter
+    UnsafeFreeResult.spec adapter
+    Ntuples.spec adapter
+    Nfields.spec adapter
+    Fname.spec adapter
+    Fnumber.spec adapter
+    Ftable.spec adapter
+    Ftablecol.spec adapter
+    Fformat.spec adapter
+    Ftype.spec adapter
+    Fmod.spec adapter
+    Fsize.spec adapter
+    Getvalue.spec adapter
+    GetvalueCopy.spec adapter
+    Getisnull.spec adapter
+    Getlength.spec adapter
+    Nparams.spec adapter
+    Paramtype.spec adapter
+    CmdStatus.spec adapter
+    CmdTuples.spec adapter

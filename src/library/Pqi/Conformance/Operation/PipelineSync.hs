@@ -5,7 +5,7 @@ module Pqi.Conformance.Operation.PipelineSync
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
 import qualified Pqi.Conformance.Operation.PipelineSync.Parity as Parity
@@ -13,46 +13,46 @@ import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (takeCommandResults, takeResult)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "pipelineSync" do
-    Parity.spec proxy
+    Parity.spec adapter
     it "collects pipelined queries per sync" \conninfo ->
-      differential proxy conninfo \connection -> do
-        entered <- enterPipelineMode connection
+      differential adapter conninfo \connection -> do
+        entered <- connection.enterPipelineMode
         sent <-
           traverse
-            (\sql -> sendQueryParams connection sql [] Lq.Text)
+            (\sql -> connection.sendQueryParams sql [] Lq.Text)
             ["select 1 :: int4", "select 'two' :: text", "select 3 :: int4, 'three' :: text"]
-        synced <- pipelineSync connection
+        synced <- connection.pipelineSync
         first <- takeCommandResults connection
         second <- takeCommandResults connection
         third <- takeCommandResults connection
         syncResult <- takeResult connection
         idle <- takeResult connection
-        exited <- exitPipelineMode connection
+        exited <- connection.exitPipelineMode
         pure (entered, sent, synced, first, second, third, syncResult, idle, exited)
 
     it "aborts the rest of the pipeline after an error" \conninfo ->
-      differential proxy conninfo \connection -> do
-        entered <- enterPipelineMode connection
+      differential adapter conninfo \connection -> do
+        entered <- connection.enterPipelineMode
         sent <-
           traverse
-            (\sql -> sendQueryParams connection sql [] Lq.Text)
+            (\sql -> connection.sendQueryParams sql [] Lq.Text)
             ["select 1", "select 1 / 0", "select 3"]
-        synced <- pipelineSync connection
+        synced <- connection.pipelineSync
         first <- takeCommandResults connection
         failed <- takeCommandResults connection
         aborted <- takeCommandResults connection
         syncResult <- takeResult connection
-        exited <- exitPipelineMode connection
+        exited <- connection.exitPipelineMode
         pure (entered, sent, synced, first, failed, aborted, syncResult, exited)
 
     it "returns a sync result when called without prior commands" \conninfo ->
-      differential proxy conninfo \connection -> do
-        entered <- enterPipelineMode connection
-        synced <- pipelineSync connection
+      differential adapter conninfo \connection -> do
+        entered <- connection.enterPipelineMode
+        synced <- connection.pipelineSync
         syncResult <- takeResult connection
         trailing <- takeResult connection
-        exited <- exitPipelineMode connection
+        exited <- connection.exitPipelineMode
         pure (entered, synced, syncResult, trailing, exited)

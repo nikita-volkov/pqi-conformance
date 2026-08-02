@@ -5,25 +5,25 @@ module Pqi.Conformance.Operation.SetSingleRowMode
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (drainResults)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "setSingleRowMode" do
     it "splits a multi-row result into single-row results" \conninfo ->
-      differential proxy conninfo \connection -> do
-        sent <- sendQuery connection "select i from generate_series (1, 3) as i"
-        singleRow <- setSingleRowMode connection
+      differential adapter conninfo \connection -> do
+        sent <- connection.sendQuery "select i from generate_series (1, 3) as i"
+        singleRow <- connection.setSingleRowMode
         results <- drainResults connection
         pure (sent, singleRow, results)
 
     it "handles an empty result" \conninfo ->
-      differential proxy conninfo \connection -> do
-        sent <- sendQuery connection "select 1 where false"
-        singleRow <- setSingleRowMode connection
+      differential adapter conninfo \connection -> do
+        sent <- connection.sendQuery "select 1 where false"
+        singleRow <- connection.setSingleRowMode
         results <- drainResults connection
         pure (sent, singleRow, results)

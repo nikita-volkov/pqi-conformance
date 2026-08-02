@@ -5,26 +5,26 @@ module Pqi.Conformance.Operation.LoOpen
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (inTransaction)
 import System.IO (IOMode (..))
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "loOpen" do
     it "opens an existing object and rejects a missing one" \conninfo ->
-      differential proxy conninfo \connection ->
+      differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- loCreat connection
+          oid <- connection.loCreat
           opened <- for oid \o -> do
-            fd <- loOpen connection o ReadWriteMode
-            traverse_ (loClose connection) fd
+            fd <- connection.loOpen o ReadWriteMode
+            traverse_ connection.loClose fd
             pure (isJust fd)
           loUnlink' oid connection
-          missing <- loOpen connection 4242424 ReadMode
+          missing <- connection.loOpen 4242424 ReadMode
           pure (opened, isJust missing)
   where
-    loUnlink' oid connection = traverse_ (loUnlink connection) oid
+    loUnlink' oid connection = traverse_ connection.loUnlink oid

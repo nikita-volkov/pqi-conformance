@@ -32,7 +32,7 @@ module Pqi.Conformance.Operation.Cancel.Stale
 where
 
 import Control.Exception (bracket)
-import Pqi (ExecStatus (..), FieldCode (..), IsCancel (..), IsConnection (..))
+import qualified Pqi
 import qualified Pqi as Lq
 import Pqi.Conformance.Observation (ResultObservation (..))
 import Pqi.Conformance.Prelude
@@ -47,12 +47,12 @@ import Test.Hspec
 iterations :: Int
 iterations = 30
 
-spec :: forall c. (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "stale cancel" do
     it "does not corrupt the next command when a cancel is sent during pipeline clean-up" \conninfo -> do
       outcomes <- for [1 .. iterations] \i -> do
-        outcome <- runScenario proxy conninfo
+        outcome <- runScenario adapter conninfo
         pure (i, outcome)
       -- Every iteration's victim query must have succeeded.  Any iteration that
       -- did not means a stale cancel corrupted the connection (57014).
@@ -63,22 +63,20 @@ spec proxy =
 -- the victim query succeeded, or @Just (status, sqlstate)@ describing how it
 -- failed (e.g. @(FatalError, Just "57014")@).
 runScenario ::
-  forall c.
-  (IsConnection c) =>
-  Proxy c ->
+  Pqi.Adapter ->
   ByteString ->
-  IO (Maybe (ExecStatus, Maybe ByteString))
-runScenario _ conninfo =
-  bracket (connectdb conninfo :: IO c) finish \connection -> do
+  IO (Maybe (Lq.ExecStatus, Maybe ByteString))
+runScenario adapter conninfo =
+  bracket (adapter.connectdb conninfo) (.finish) \connection -> do
     -- Build a pipeline with a fast query followed by a slow one, mirroring the
     -- sequence hasql issues.  Two prepared statements keep pendingParses in
     -- play, matching the real-world reproduction.
-    _ <- enterPipelineMode connection
-    _ <- sendPrepare connection "s1" "select $1::int" Nothing
-    _ <- sendQueryPrepared connection "s1" [Just ("42", Lq.Text)] Lq.Text
-    _ <- sendPrepare connection "s2" "select pg_sleep($1)" (Just [float8Oid])
-    _ <- sendQueryPrepared connection "s2" [Just ("0.1", Lq.Text)] Lq.Text
-    _ <- pipelineSync connection
+    _ <- connection.enterPipelineMode
+    _ <- connection.sendPrepare "s1" "select $1::int" Nothing
+    _ <- connection.sendQueryPrepared "s1" [Just ("42", Lq.Text)] Lq.Text
+    _ <- connection.sendPrepare "s2" "select pg_sleep($1)" (Just [float8Oid])
+    _ <- connection.sendQueryPrepared "s2" [Just ("0.1", Lq.Text)] Lq.Text
+    _ <- connection.pipelineSync
 
     -- Interrupt the read mid-pipeline, exactly as hasql's timeout does: the
     -- slow pg_sleep is still running when the read is abandoned.
@@ -87,27 +85,27 @@ runScenario _ conninfo =
     -- cleanUpAfterInterruption: drain, cancel, drain.  The cancel is sent while
     -- the pipeline is mid-flight; on buggy code its SIGINT can arrive late.
     _ <- drainResults connection
-    mHandle <- getCancel connection
-    _ <- for mHandle cancel
+    mHandle <- connection.getCancel
+    _ <- for mHandle (.cancel)
     _ <- drainResults connection
 
     -- leavePipeline: the exact restore sequence hasql performs, including the
     -- retry it falls back to.
-    statusBefore <- pipelineStatus connection
+    statusBefore <- connection.pipelineStatus
     when (statusBefore == Lq.PipelineOn) do
-      _ <- pipelineSync connection
+      _ <- connection.pipelineSync
       _ <- drainResults connection
-      _ <- sendFlushRequest connection
+      _ <- connection.sendFlushRequest
       _ <- drainResults connection
-      ok <- exitPipelineMode connection
+      ok <- connection.exitPipelineMode
       unless ok do
         _ <- drainResults connection
-        void (exitPipelineMode connection)
+        void connection.exitPipelineMode
 
     -- The victim.  It must not be cancelled by the stale signal.
     execScenario "select 99" connection >>= \case
-      Nothing -> pure (Just (FatalError, Just "no-result"))
+      Nothing -> pure (Just (Lq.FatalError, Just "no-result"))
       Just observation ->
         case observation.status of
-          TuplesOk -> pure Nothing
-          status -> pure (Just (status, fromMaybe Nothing (lookup DiagSqlstate observation.errorFields)))
+          Lq.TuplesOk -> pure Nothing
+          status -> pure (Just (status, fromMaybe Nothing (lookup Lq.DiagSqlstate observation.errorFields)))

@@ -6,22 +6,22 @@ module Pqi.Conformance.Operation.ConsumeInput
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (drainResults)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "consumeInput" do
     it "drives result collection together with isBusy" \conninfo ->
-      differential proxy conninfo \connection -> do
-        sent <- sendQuery connection "select 42"
+      differential adapter conninfo \connection -> do
+        sent <- connection.sendQuery "select 42"
         let settle (0 :: Int) = pure False
             settle n = do
-              consumed <- consumeInput connection
-              busy <- isBusy connection
+              consumed <- connection.consumeInput
+              busy <- connection.isBusy
               if busy then threadDelay 1000 >> settle (n - 1) else pure consumed
         consumed <- settle 10000
         results <- drainResults connection

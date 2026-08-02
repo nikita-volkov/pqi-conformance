@@ -5,24 +5,23 @@ module Pqi.Conformance.Operation.DescribePortal
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "describePortal" do
     it "describes a declared cursor" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- exec connection "begin"
+      differential adapter conninfo \connection -> do
+        _ <- connection.exec "begin"
         _ <-
-          exec
-            connection
+          connection.exec
             "declare conformance_cursor cursor for select 1 :: int4 as n, 'x' :: text as t"
-        describePortal connection "conformance_cursor" >>= traverse observeResult
+        connection.describePortal "conformance_cursor" >>= traverse observeResult
 
     it "rejects an unknown portal" \conninfo ->
-      differential proxy conninfo \connection ->
-        describePortal connection "conformance_no_portal" >>= traverse observeResult
+      differential adapter conninfo \connection ->
+        connection.describePortal "conformance_no_portal" >>= traverse observeResult

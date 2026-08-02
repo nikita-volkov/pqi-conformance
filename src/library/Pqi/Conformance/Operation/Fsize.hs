@@ -5,19 +5,19 @@ module Pqi.Conformance.Operation.Fsize
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "fsize" do
     it "reports type sizes and degrades out of range" \conninfo ->
-      differential proxy conninfo \connection -> do
-        result <- exec connection "select 1 :: int2, 1 :: int4, 1 :: int8, 'x' :: text, true"
+      differential adapter conninfo \connection -> do
+        result <- connection.exec "select 1 :: int2, 1 :: int4, 1 :: int8, 'x' :: text, true"
         for result \r -> do
-          n <- nfields r
-          sizes <- traverse (fsize r) [0 .. n - 1]
-          outOfRange <- fsize r 9
+          n <- r.nfields
+          sizes <- traverse r.fsize [0 .. n - 1]
+          outOfRange <- r.fsize 9
           pure (sizes, outOfRange)

@@ -5,21 +5,20 @@ module Pqi.Conformance.Operation.SendQueryParams
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (drainResults, int4Oid)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "sendQueryParams" do
     it "sends a parameterized query and collects its result" \conninfo ->
-      differential proxy conninfo \connection -> do
+      differential adapter conninfo \connection -> do
         sent <-
-          sendQueryParams
-            connection
+          connection.sendQueryParams
             "select $1 :: int4 + $2 :: int4, $3 :: text"
             [Just (int4Oid, "40", Lq.Text), Just (int4Oid, "2", Lq.Text), Nothing]
             Lq.Text

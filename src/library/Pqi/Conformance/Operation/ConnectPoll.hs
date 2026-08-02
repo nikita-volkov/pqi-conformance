@@ -5,19 +5,19 @@ module Pqi.Conformance.Operation.ConnectPoll
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (pollUntilDone)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "connectPoll" do
     it "reaches a terminal polling status and a ready connection" \conninfo ->
-      differentialConnect proxy conninfo \(_ :: Proxy c) conninfo' -> do
-        connection <- connectStart conninfo' :: IO c
-        terminal <- pollUntilDone (connectPoll connection)
-        connStatus <- status connection
-        finish connection
+      differentialConnect adapter conninfo \adapter' conninfo' -> do
+        connection <- adapter'.connectStart conninfo'
+        terminal <- pollUntilDone connection.connectPoll
+        connStatus <- connection.status
+        connection.finish
         pure (terminal, connStatus)

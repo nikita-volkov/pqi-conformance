@@ -6,22 +6,22 @@ module Pqi.Conformance.Operation.ClientEncoding
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (execScenario)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "clientEncoding" do
     it "round-trips and governs result re-encoding" \conninfo ->
-      differential proxy conninfo \connection -> do
-        initial <- clientEncoding connection
-        setOk <- setClientEncoding connection "LATIN1"
-        switched <- clientEncoding connection
-        reported <- parameterStatus connection "client_encoding"
+      differential adapter conninfo \connection -> do
+        initial <- connection.clientEncoding
+        setOk <- connection.setClientEncoding "LATIN1"
+        switched <- connection.clientEncoding
+        reported <- connection.parameterStatus "client_encoding"
         latinCell <- execScenario "select chr(233) as e" connection
-        restoreOk <- setClientEncoding connection "UTF8"
+        restoreOk <- connection.setClientEncoding "UTF8"
         utfCell <- execScenario "select chr(233) as e" connection
         pure (initial, setOk, switched, reported, latinCell, restoreOk, utfCell)

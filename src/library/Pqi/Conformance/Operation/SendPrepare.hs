@@ -5,17 +5,17 @@ module Pqi.Conformance.Operation.SendPrepare
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (drainResults)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "sendPrepare" do
     it "prepares a statement asynchronously" \conninfo ->
-      differential proxy conninfo \connection -> do
-        sent <- sendPrepare connection "conformance_send_prepare" "select $1 :: int4 * 2" Nothing
+      differential adapter conninfo \connection -> do
+        sent <- connection.sendPrepare "conformance_send_prepare" "select $1 :: int4 * 2" Nothing
         results <- drainResults connection
         pure (sent, results)

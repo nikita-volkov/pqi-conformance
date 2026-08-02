@@ -6,18 +6,18 @@ module Pqi.Conformance.Operation.Fnumber
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "fnumber" do
     it "resolves names like an identifier" \conninfo ->
-      differential proxy conninfo \connection -> do
-        result <- exec connection "select 1 as foo, 2 as \"Bar\""
+      differential adapter conninfo \connection -> do
+        result <- connection.exec "select 1 as foo, 2 as \"Bar\""
         for result \r ->
           traverse
-            (fnumber r)
+            r.fnumber
             ["foo", "FOO", "Foo", "Bar", "bar", "\"Bar\"", "\"foo\"", "missing"]

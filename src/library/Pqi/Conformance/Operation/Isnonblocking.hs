@@ -5,17 +5,17 @@ module Pqi.Conformance.Operation.Isnonblocking
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "isnonblocking" do
     it "is off initially and reflects a change" \conninfo ->
-      differential proxy conninfo \connection -> do
-        initially <- isnonblocking connection
-        _ <- setnonblocking connection True
-        afterEnable <- isnonblocking connection
+      differential adapter conninfo \connection -> do
+        initially <- connection.isnonblocking
+        _ <- connection.setnonblocking True
+        afterEnable <- connection.isnonblocking
         pure (initially, afterEnable)

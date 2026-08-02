@@ -5,20 +5,20 @@ module Pqi.Conformance.Operation.ConnectStart
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (pollUntilDone)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "connectStart" do
     it "begins an asynchronous connection that polls to readiness" \conninfo ->
-      differentialConnect proxy conninfo \(_ :: Proxy c) conninfo' -> do
-        connection <- connectStart conninfo' :: IO c
-        polled <- pollUntilDone (connectPoll connection)
+      differentialConnect adapter conninfo \adapter' conninfo' -> do
+        connection <- adapter'.connectStart conninfo'
+        polled <- pollUntilDone connection.connectPoll
         observation <- observeConnection connection
-        finish connection
+        connection.finish
         pure (polled, observation)

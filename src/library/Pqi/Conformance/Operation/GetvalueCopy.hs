@@ -5,19 +5,19 @@ module Pqi.Conformance.Operation.GetvalueCopy
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "getvalue'" do
     it "copies cells that survive freeing the result" \conninfo ->
-      differential proxy conninfo \connection -> do
-        result <- exec connection "select 'copied' :: text, null :: int4"
+      differential adapter conninfo \connection -> do
+        result <- connection.exec "select 'copied' :: text, null :: int4"
         for result \r -> do
-          first <- getvalue' r 0 0
-          second <- getvalue' r 0 1
-          unsafeFreeResult r
+          first <- r.getvalue' 0 0
+          second <- r.getvalue' 0 1
+          r.unsafeFreeResult
           pure (first, second)

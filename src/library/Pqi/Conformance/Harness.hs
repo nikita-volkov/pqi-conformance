@@ -14,9 +14,9 @@ import Control.Exception (bracket, bracket_)
 import qualified Data.ByteString.Char8 as ByteString.Char8
 import qualified Data.Text as Text
 import Data.Unique (hashUnique, newUnique)
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Prelude
-import Pqi.Conformance.Reference (Reference)
+import qualified Pqi.Conformance.Reference as Reference
 import Test.Hspec
 import qualified TestcontainersPostgresql as TcPg
 
@@ -48,16 +48,15 @@ containerHook = aroundAll (TcPg.run config) . aroundWith withConninfo
 -- Each call creates a fresh database for the scenario and drops it afterwards,
 -- so tests are isolated even when the container is shared.
 differential ::
-  forall c a.
-  (Eq a, Show a, IsConnection c, HasCallStack) =>
-  Proxy c ->
+  (Eq a, Show a, HasCallStack) =>
+  Pqi.Adapter ->
   ByteString ->
-  (forall c'. (IsConnection c') => c' -> IO a) ->
+  (Pqi.Connection -> IO a) ->
   Expectation
-differential _ adminConninfo scenario =
+differential adapter adminConninfo scenario =
   withTestDb adminConninfo \testConninfo -> do
-    candidate <- bracket (connectdb testConninfo :: IO c) finish scenario
-    reference <- bracket (connectdb testConninfo :: IO Reference) finish scenario
+    candidate <- bracket (adapter.connectdb testConninfo) (.finish) scenario
+    reference <- bracket (Reference.adapter.connectdb testConninfo) (.finish) scenario
     candidate `shouldBe` reference
 
 -- Create a uniquely named database, run the action against it, and drop it on
@@ -77,23 +76,22 @@ withTestDb adminConninfo action = do
 
 adminExec :: ByteString -> ByteString -> IO ()
 adminExec conninfo sql = do
-  conn <- connectdb conninfo :: IO Reference
-  _ <- exec conn sql
-  finish conn
+  conn <- Reference.adapter.connectdb conninfo
+  _ <- conn.exec sql
+  conn.finish
 
 -- | Like 'differential', but for scenarios that exercise connection
 -- establishment itself ('Pqi.connectdb' on a broken conninfo,
--- 'Pqi.connectStart', 'Pqi.newNullConnection', ...): instead of an
--- opened connection the scenario receives the conninfo and the candidate's
--- connection type (via 'Proxy'), and manages any connections it opens itself.
+-- 'Pqi.connectStart', 'Pqi.newNullConnection', ...): instead of an opened
+-- connection the scenario receives the conninfo and the adapter to use, and
+-- manages any connections it opens itself.
 differentialConnect ::
-  forall c a.
-  (Eq a, Show a, IsConnection c, HasCallStack) =>
-  Proxy c ->
+  (Eq a, Show a, HasCallStack) =>
+  Pqi.Adapter ->
   ByteString ->
-  (forall c'. (IsConnection c', HasCallStack) => Proxy c' -> ByteString -> IO a) ->
+  (Pqi.Adapter -> ByteString -> IO a) ->
   Expectation
-differentialConnect proxy conninfo scenario = do
-  candidate <- scenario proxy conninfo
-  reference <- scenario (Proxy :: Proxy Reference) conninfo
+differentialConnect adapter conninfo scenario = do
+  candidate <- scenario adapter conninfo
+  reference <- scenario Reference.adapter conninfo
   candidate `shouldBe` reference

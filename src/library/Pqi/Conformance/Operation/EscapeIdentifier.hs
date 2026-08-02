@@ -5,22 +5,22 @@ module Pqi.Conformance.Operation.EscapeIdentifier
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (execScenario)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "escapeIdentifier" do
     it "escapes a range of identifiers" \conninfo ->
-      differential proxy conninfo \connection ->
-        traverse (escapeIdentifier connection) identifierCases
+      differential adapter conninfo \connection ->
+        traverse connection.escapeIdentifier identifierCases
 
     it "produces identifiers that round-trip through a query" \conninfo ->
-      differential proxy conninfo \connection -> do
-        escaped <- escapeIdentifier connection "Wéird \"column\" name"
+      differential adapter conninfo \connection -> do
+        escaped <- connection.escapeIdentifier "Wéird \"column\" name"
         for escaped \identifier ->
           execScenario ("select 1 as " <> identifier) connection
   where

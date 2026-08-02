@@ -6,22 +6,22 @@ module Pqi.Conformance.Operation.EnableNoticeReporting
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "enableNoticeReporting" do
     it "makes a raised notice retrievable" \conninfo ->
-      differential proxy conninfo \connection -> do
+      differential adapter conninfo \connection -> do
         beforeEnable <- raiseNoticeAndCollect connection
-        enableNoticeReporting connection
+        connection.enableNoticeReporting
         afterEnable <- raiseNoticeAndCollect connection
         pure (beforeEnable, afterEnable)
 
-raiseNoticeAndCollect :: (IsConnection c) => c -> IO Bool
+raiseNoticeAndCollect :: Pqi.Connection -> IO Bool
 raiseNoticeAndCollect connection = do
-  _ <- exec connection "do $$ begin raise notice 'conformance notice'; end $$"
-  isJust <$> getNotice connection
+  _ <- connection.exec "do $$ begin raise notice 'conformance notice'; end $$"
+  isJust <$> connection.getNotice

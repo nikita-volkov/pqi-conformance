@@ -8,18 +8,18 @@ module Pqi.Conformance.Operation.LoCreat
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (inTransaction)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "loCreat" do
     it "creates a large object" \conninfo ->
-      differential proxy conninfo \connection ->
+      differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- loCreat connection
-          traverse_ (loUnlink connection) oid
+          oid <- connection.loCreat
+          traverse_ connection.loUnlink oid
           pure (isJust oid)

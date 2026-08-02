@@ -5,19 +5,19 @@ module Pqi.Conformance.Operation.EnterPipelineMode
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "enterPipelineMode" do
     it "enters pipeline mode and is idempotent" \conninfo ->
-      differential proxy conninfo \connection -> do
-        before <- pipelineStatus connection
-        entered <- enterPipelineMode connection
-        enteredAgain <- enterPipelineMode connection
-        while <- pipelineStatus connection
-        _ <- exitPipelineMode connection
+      differential adapter conninfo \connection -> do
+        before <- connection.pipelineStatus
+        entered <- connection.enterPipelineMode
+        enteredAgain <- connection.enterPipelineMode
+        while <- connection.pipelineStatus
+        _ <- connection.exitPipelineMode
         pure (before, entered, enteredAgain, while)

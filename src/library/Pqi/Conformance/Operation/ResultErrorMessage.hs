@@ -12,20 +12,20 @@ module Pqi.Conformance.Operation.ResultErrorMessage
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "resultErrorMessage" do
     it "matches the full formatted libpq error string on failure and is empty on success" \conninfo ->
-      differential proxy conninfo \connection -> do
+      differential adapter conninfo \connection -> do
         failed <-
-          exec connection "do $$ begin raise exception 'conformance error'; end $$"
-            >>= traverse resultErrorMessage
+          connection.exec "do $$ begin raise exception 'conformance error'; end $$"
+            >>= traverse (.resultErrorMessage)
         succeeded <-
-          exec connection "select 1"
-            >>= traverse resultErrorMessage
+          connection.exec "select 1"
+            >>= traverse (.resultErrorMessage)
         pure (failed, succeeded)

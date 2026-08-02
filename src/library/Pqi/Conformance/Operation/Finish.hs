@@ -5,23 +5,23 @@ module Pqi.Conformance.Operation.Finish
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "finish" do
     it "closes an open connection cleanly" \conninfo ->
-      differentialConnect proxy conninfo \(_ :: Proxy c) conninfo' -> do
-        connection <- connectdb conninfo' :: IO c
-        before <- status connection
-        finish connection
+      differentialConnect adapter conninfo \adapter' conninfo' -> do
+        connection <- adapter'.connectdb conninfo'
+        before <- connection.status
+        connection.finish
         pure before
 
     it "closes the null sentinel cleanly" \conninfo ->
-      differentialConnect proxy conninfo \(_ :: Proxy c) _ -> do
-        connection <- newNullConnection :: IO c
-        finish connection
+      differentialConnect adapter conninfo \adapter' _ -> do
+        connection <- adapter'.newNullConnection
+        connection.finish
         pure ()

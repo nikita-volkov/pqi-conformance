@@ -5,20 +5,20 @@ module Pqi.Conformance.Operation.Fmod
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "fmod" do
     it "reports type modifiers and degrades out of range" \conninfo ->
-      differential proxy conninfo \connection -> do
+      differential adapter conninfo \connection -> do
         result <-
-          exec connection "select 1.5 :: numeric(10,2), 'pad' :: char(5), 'x' :: varchar(3), true, 1 :: int4"
+          connection.exec "select 1.5 :: numeric(10,2), 'pad' :: char(5), 'x' :: varchar(3), true, 1 :: int4"
         for result \r -> do
-          n <- nfields r
-          modifiers <- traverse (fmod r) [0 .. n - 1]
-          outOfRange <- fmod r 9
+          n <- r.nfields
+          modifiers <- traverse r.fmod [0 .. n - 1]
+          outOfRange <- r.fmod 9
           pure (modifiers, outOfRange)

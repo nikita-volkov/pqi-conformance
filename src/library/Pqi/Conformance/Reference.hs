@@ -1,159 +1,150 @@
--- | The reference connection: a direct @postgresql-libpq@ wrapper used as the
+-- | The reference adapter: a direct @postgresql-libpq@ wrapper used as the
 -- ground truth in differential tests. It is intentionally independent of the
--- @pqi-ffi@ adapter so that adapter test suites can depend on
--- @pqi-conformance@ without a circular dependency through @pqi-ffi@.
+-- @pqi-ffi@ package (despite producing byte-identical output) so that
+-- adapter test suites can depend on @pqi-conformance@ without a circular
+-- dependency through @pqi-ffi@.
 module Pqi.Conformance.Reference
-  ( Reference (..),
-    RefResult (..),
-    RefCancel (..),
+  ( adapter,
   )
 where
 
 import qualified Database.PostgreSQL.LibPQ as LibPQ
-import Pqi
-  ( IsCancel (..),
-    IsConnection (..),
-    IsResult (..),
-  )
 import qualified Pqi
 import Pqi.Conformance.Prelude
 
--- | A direct wrapper over a @postgresql-libpq@ connection, used as the
--- differential-testing reference.
-newtype Reference = Reference LibPQ.Connection
+-- | The reference adapter.
+adapter :: Pqi.Adapter
+adapter =
+  Pqi.Adapter
+    { Pqi.name = "postgresql-libpq (reference)",
+      Pqi.connectdb = \conninfo -> mkConnection <$> LibPQ.connectdb conninfo,
+      Pqi.connectStart = \conninfo -> mkConnection <$> LibPQ.connectStart conninfo,
+      Pqi.newNullConnection = mkConnection <$> LibPQ.newNullConnection
+    }
 
--- | A result backed by a C @PGresult@.
-newtype RefResult = RefResult LibPQ.Result
+-- | Build a 'Pqi.Connection' whose fields close over the given
+-- @postgresql-libpq@ connection handle.
+mkConnection :: LibPQ.Connection -> Pqi.Connection
+mkConnection c =
+  Pqi.Connection
+    { Pqi.connectPoll = fromPollingStatus <$> LibPQ.connectPoll c,
+      Pqi.isNullConnection = LibPQ.isNullConnection c,
+      Pqi.finish = LibPQ.finish c,
+      Pqi.reset = LibPQ.reset c,
+      Pqi.resetStart = LibPQ.resetStart c,
+      Pqi.resetPoll = fromPollingStatus <$> LibPQ.resetPoll c,
+      Pqi.db = LibPQ.db c,
+      Pqi.user = LibPQ.user c,
+      Pqi.pass = LibPQ.pass c,
+      Pqi.host = LibPQ.host c,
+      Pqi.port = LibPQ.port c,
+      Pqi.options = LibPQ.options c,
+      Pqi.status = fromConnStatus <$> LibPQ.status c,
+      Pqi.transactionStatus = fromTransactionStatus <$> LibPQ.transactionStatus c,
+      Pqi.parameterStatus = \name -> LibPQ.parameterStatus c name,
+      Pqi.protocolVersion = LibPQ.protocolVersion c,
+      Pqi.serverVersion = LibPQ.serverVersion c,
+      Pqi.errorMessage = LibPQ.errorMessage c,
+      Pqi.socket = LibPQ.socket c,
+      Pqi.backendPID = fromIntegral <$> LibPQ.backendPID c,
+      Pqi.connectionNeedsPassword = LibPQ.connectionNeedsPassword c,
+      Pqi.connectionUsedPassword = LibPQ.connectionUsedPassword c,
+      Pqi.exec = \sql -> fmap mkResult <$> LibPQ.exec c sql,
+      Pqi.execParams = \sql params resultFormat ->
+        fmap mkResult <$> LibPQ.execParams c sql (fmap (fmap toParam) params) (toFormat resultFormat),
+      Pqi.prepare = \name sql paramTypes ->
+        fmap mkResult <$> LibPQ.prepare c name sql (fmap (fmap toOid) paramTypes),
+      Pqi.execPrepared = \name params resultFormat ->
+        fmap mkResult <$> LibPQ.execPrepared c name (fmap (fmap toBoundParam) params) (toFormat resultFormat),
+      Pqi.describePrepared = \name -> fmap mkResult <$> LibPQ.describePrepared c name,
+      Pqi.describePortal = \name -> fmap mkResult <$> LibPQ.describePortal c name,
+      Pqi.escapeStringConn = \s -> LibPQ.escapeStringConn c s,
+      Pqi.escapeByteaConn = \s -> LibPQ.escapeByteaConn c s,
+      Pqi.escapeIdentifier = \s -> LibPQ.escapeIdentifier c s,
+      Pqi.sendQuery = \sql -> LibPQ.sendQuery c sql,
+      Pqi.sendQueryParams = \sql params resultFormat ->
+        LibPQ.sendQueryParams c sql (fmap (fmap toParam) params) (toFormat resultFormat),
+      Pqi.sendPrepare = \name sql paramTypes ->
+        LibPQ.sendPrepare c name sql (fmap (fmap toOid) paramTypes),
+      Pqi.sendQueryPrepared = \name params resultFormat ->
+        LibPQ.sendQueryPrepared c name (fmap (fmap toBoundParam) params) (toFormat resultFormat),
+      Pqi.sendDescribePrepared = \name -> LibPQ.sendDescribePrepared c name,
+      Pqi.sendDescribePortal = \name -> LibPQ.sendDescribePortal c name,
+      Pqi.getResult = fmap mkResult <$> LibPQ.getResult c,
+      Pqi.consumeInput = LibPQ.consumeInput c,
+      Pqi.isBusy = LibPQ.isBusy c,
+      Pqi.setnonblocking = \nonBlocking -> LibPQ.setnonblocking c nonBlocking,
+      Pqi.isnonblocking = LibPQ.isnonblocking c,
+      Pqi.setSingleRowMode = LibPQ.setSingleRowMode c,
+      Pqi.flush = fromFlushStatus <$> LibPQ.flush c,
+      Pqi.pipelineStatus = fromPipelineStatus <$> LibPQ.pipelineStatus c,
+      Pqi.enterPipelineMode = LibPQ.enterPipelineMode c,
+      Pqi.exitPipelineMode = LibPQ.exitPipelineMode c,
+      Pqi.pipelineSync = LibPQ.pipelineSync c,
+      Pqi.sendFlushRequest = LibPQ.sendFlushRequest c,
+      Pqi.getCancel = fmap mkCancel <$> LibPQ.getCancel c,
+      Pqi.notifies = fmap fromNotify <$> LibPQ.notifies c,
+      Pqi.disableNoticeReporting = LibPQ.disableNoticeReporting c,
+      Pqi.enableNoticeReporting = LibPQ.enableNoticeReporting c,
+      Pqi.getNotice = LibPQ.getNotice c,
+      Pqi.putCopyData = \value -> fromCopyInResult <$> LibPQ.putCopyData c value,
+      Pqi.putCopyEnd = \reason -> fromCopyInResult <$> LibPQ.putCopyEnd c reason,
+      Pqi.getCopyData = \nonBlocking -> fromCopyOutResult <$> LibPQ.getCopyData c nonBlocking,
+      Pqi.loCreat = fmap fromOid <$> LibPQ.loCreat c,
+      Pqi.loCreate = \oid -> fmap fromOid <$> LibPQ.loCreate c (toOid oid),
+      Pqi.loImport = \path -> fmap fromOid <$> LibPQ.loImport c path,
+      Pqi.loImportWithOid = \path oid -> fmap fromOid <$> LibPQ.loImportWithOid c path (toOid oid),
+      Pqi.loExport = \oid path -> LibPQ.loExport c (toOid oid) path,
+      Pqi.loOpen = \oid mode -> fmap fromLibPQLoFd <$> LibPQ.loOpen c (toOid oid) mode,
+      Pqi.loWrite = \fd value -> LibPQ.loWrite c (toLibPQLoFd fd) value,
+      Pqi.loRead = \fd len -> LibPQ.loRead c (toLibPQLoFd fd) len,
+      Pqi.loSeek = \fd mode offset -> LibPQ.loSeek c (toLibPQLoFd fd) mode offset,
+      Pqi.loTell = \fd -> LibPQ.loTell c (toLibPQLoFd fd),
+      Pqi.loTruncate = \fd len -> LibPQ.loTruncate c (toLibPQLoFd fd) len,
+      Pqi.loClose = \fd -> LibPQ.loClose c (toLibPQLoFd fd),
+      Pqi.loUnlink = \oid -> LibPQ.loUnlink c (toOid oid),
+      Pqi.clientEncoding = LibPQ.clientEncoding c,
+      Pqi.setClientEncoding = \encoding -> LibPQ.setClientEncoding c encoding,
+      Pqi.setErrorVerbosity = \verbosity ->
+        fromVerbosity <$> LibPQ.setErrorVerbosity c (toVerbosity verbosity)
+    }
 
--- | A cancellation handle backed by a C @PGcancel@.
-newtype RefCancel = RefCancel LibPQ.Cancel
+-- | Build a 'Pqi.Result' whose fields close over the given
+-- @postgresql-libpq@ result handle.
+mkResult :: LibPQ.Result -> Pqi.Result
+mkResult r =
+  Pqi.Result
+    { Pqi.resultStatus = fromExecStatus <$> LibPQ.resultStatus r,
+      Pqi.resultErrorMessage = LibPQ.resultErrorMessage r,
+      Pqi.resultErrorField = \field -> LibPQ.resultErrorField r (toFieldCode field),
+      Pqi.unsafeFreeResult = LibPQ.unsafeFreeResult r,
+      Pqi.ntuples = fromRow <$> LibPQ.ntuples r,
+      Pqi.nfields = fromColumn <$> LibPQ.nfields r,
+      Pqi.fname = \column -> LibPQ.fname r (toColumn column),
+      Pqi.fnumber = \name -> fmap fromColumn <$> LibPQ.fnumber r name,
+      Pqi.ftable = \column -> fromOid <$> LibPQ.ftable r (toColumn column),
+      Pqi.ftablecol = \column -> fromColumn <$> LibPQ.ftablecol r (toColumn column),
+      Pqi.fformat = \column -> fromFormat <$> LibPQ.fformat r (toColumn column),
+      Pqi.ftype = \column -> fromOid <$> LibPQ.ftype r (toColumn column),
+      Pqi.fmod = \column -> LibPQ.fmod r (toColumn column),
+      Pqi.fsize = \column -> LibPQ.fsize r (toColumn column),
+      Pqi.getvalue = \row column -> LibPQ.getvalue' r (toRow row) (toColumn column),
+      Pqi.getvalue' = \row column -> LibPQ.getvalue' r (toRow row) (toColumn column),
+      Pqi.getisnull = \row column -> LibPQ.getisnull r (toRow row) (toColumn column),
+      Pqi.getlength = \row column -> LibPQ.getlength r (toRow row) (toColumn column),
+      Pqi.nparams = fromIntegral <$> LibPQ.nparams r,
+      Pqi.paramtype = \index -> fromOid <$> LibPQ.paramtype r (fromIntegral index),
+      Pqi.cmdStatus = LibPQ.cmdStatus r,
+      Pqi.cmdTuples = LibPQ.cmdTuples r
+    }
 
-instance IsResult RefResult where
-  resultStatus (RefResult r) = fromExecStatus <$> LibPQ.resultStatus r
-  resultErrorMessage (RefResult r) = LibPQ.resultErrorMessage r
-  resultErrorField (RefResult r) field = LibPQ.resultErrorField r (toFieldCode field)
-  unsafeFreeResult (RefResult r) = LibPQ.unsafeFreeResult r
-  ntuples (RefResult r) = fromRow <$> LibPQ.ntuples r
-  nfields (RefResult r) = fromColumn <$> LibPQ.nfields r
-  fname (RefResult r) column = LibPQ.fname r (toColumn column)
-  fnumber (RefResult r) name = fmap fromColumn <$> LibPQ.fnumber r name
-  ftable (RefResult r) column = fromOid <$> LibPQ.ftable r (toColumn column)
-  ftablecol (RefResult r) column = fromColumn <$> LibPQ.ftablecol r (toColumn column)
-  fformat (RefResult r) column = fromFormat <$> LibPQ.fformat r (toColumn column)
-  ftype (RefResult r) column = fromOid <$> LibPQ.ftype r (toColumn column)
-  fmod (RefResult r) column = LibPQ.fmod r (toColumn column)
-  fsize (RefResult r) column = LibPQ.fsize r (toColumn column)
-  getvalue (RefResult r) row column = LibPQ.getvalue r (toRow row) (toColumn column)
-  getvalue' (RefResult r) row column = LibPQ.getvalue' r (toRow row) (toColumn column)
-  getisnull (RefResult r) row column = LibPQ.getisnull r (toRow row) (toColumn column)
-  getlength (RefResult r) row column = LibPQ.getlength r (toRow row) (toColumn column)
-  nparams (RefResult r) = fromIntegral <$> LibPQ.nparams r
-  paramtype (RefResult r) index = fromOid <$> LibPQ.paramtype r (fromIntegral index)
-  cmdStatus (RefResult r) = LibPQ.cmdStatus r
-  cmdTuples (RefResult r) = LibPQ.cmdTuples r
-
-instance IsCancel RefCancel where
-  cancel (RefCancel handle) = LibPQ.cancel handle
-
-instance IsConnection Reference where
-  type ResultOf Reference = RefResult
-  type CancelOf Reference = RefCancel
-
-  connectdb conninfo = Reference <$> LibPQ.connectdb conninfo
-  connectStart conninfo = Reference <$> LibPQ.connectStart conninfo
-  connectPoll (Reference c) = fromPollingStatus <$> LibPQ.connectPoll c
-  newNullConnection = Reference <$> LibPQ.newNullConnection
-  isNullConnection (Reference c) = LibPQ.isNullConnection c
-  finish (Reference c) = LibPQ.finish c
-  reset (Reference c) = LibPQ.reset c
-  resetStart (Reference c) = LibPQ.resetStart c
-  resetPoll (Reference c) = fromPollingStatus <$> LibPQ.resetPoll c
-  db (Reference c) = LibPQ.db c
-  user (Reference c) = LibPQ.user c
-  pass (Reference c) = LibPQ.pass c
-  host (Reference c) = LibPQ.host c
-  port (Reference c) = LibPQ.port c
-  options (Reference c) = LibPQ.options c
-  status (Reference c) = fromConnStatus <$> LibPQ.status c
-  transactionStatus (Reference c) = fromTransactionStatus <$> LibPQ.transactionStatus c
-  parameterStatus (Reference c) name = LibPQ.parameterStatus c name
-  protocolVersion (Reference c) = LibPQ.protocolVersion c
-  serverVersion (Reference c) = LibPQ.serverVersion c
-  errorMessage (Reference c) = LibPQ.errorMessage c
-  socket (Reference c) = LibPQ.socket c
-  backendPID (Reference c) = fromIntegral <$> LibPQ.backendPID c
-  connectionNeedsPassword (Reference c) = LibPQ.connectionNeedsPassword c
-  connectionUsedPassword (Reference c) = LibPQ.connectionUsedPassword c
-
-  exec (Reference c) sql =
-    fmap RefResult <$> LibPQ.exec c sql
-  execParams (Reference c) sql params resultFormat =
-    fmap RefResult <$> LibPQ.execParams c sql (fmap (fmap toParam) params) (toFormat resultFormat)
-  prepare (Reference c) name sql paramTypes =
-    fmap RefResult <$> LibPQ.prepare c name sql (fmap (fmap toOid) paramTypes)
-  execPrepared (Reference c) name params resultFormat =
-    fmap RefResult <$> LibPQ.execPrepared c name (fmap (fmap toBoundParam) params) (toFormat resultFormat)
-  describePrepared (Reference c) name =
-    fmap RefResult <$> LibPQ.describePrepared c name
-  describePortal (Reference c) name =
-    fmap RefResult <$> LibPQ.describePortal c name
-
-  escapeStringConn (Reference c) = LibPQ.escapeStringConn c
-  escapeByteaConn (Reference c) = LibPQ.escapeByteaConn c
-  escapeIdentifier (Reference c) = LibPQ.escapeIdentifier c
-
-  sendQuery (Reference c) sql = LibPQ.sendQuery c sql
-  sendQueryParams (Reference c) sql params resultFormat =
-    LibPQ.sendQueryParams c sql (fmap (fmap toParam) params) (toFormat resultFormat)
-  sendPrepare (Reference c) name sql paramTypes =
-    LibPQ.sendPrepare c name sql (fmap (fmap toOid) paramTypes)
-  sendQueryPrepared (Reference c) name params resultFormat =
-    LibPQ.sendQueryPrepared c name (fmap (fmap toBoundParam) params) (toFormat resultFormat)
-  sendDescribePrepared (Reference c) name = LibPQ.sendDescribePrepared c name
-  sendDescribePortal (Reference c) name = LibPQ.sendDescribePortal c name
-  getResult (Reference c) = fmap RefResult <$> LibPQ.getResult c
-  consumeInput (Reference c) = LibPQ.consumeInput c
-  isBusy (Reference c) = LibPQ.isBusy c
-  setnonblocking (Reference c) nonBlocking = LibPQ.setnonblocking c nonBlocking
-  isnonblocking (Reference c) = LibPQ.isnonblocking c
-  setSingleRowMode (Reference c) = LibPQ.setSingleRowMode c
-  flush (Reference c) = fromFlushStatus <$> LibPQ.flush c
-
-  pipelineStatus (Reference c) = fromPipelineStatus <$> LibPQ.pipelineStatus c
-  enterPipelineMode (Reference c) = LibPQ.enterPipelineMode c
-  exitPipelineMode (Reference c) = LibPQ.exitPipelineMode c
-  pipelineSync (Reference c) = LibPQ.pipelineSync c
-  sendFlushRequest (Reference c) = LibPQ.sendFlushRequest c
-
-  getCancel (Reference c) = fmap RefCancel <$> LibPQ.getCancel c
-
-  notifies (Reference c) = fmap fromNotify <$> LibPQ.notifies c
-  disableNoticeReporting (Reference c) = LibPQ.disableNoticeReporting c
-  enableNoticeReporting (Reference c) = LibPQ.enableNoticeReporting c
-  getNotice (Reference c) = LibPQ.getNotice c
-
-  putCopyData (Reference c) value = fromCopyInResult <$> LibPQ.putCopyData c value
-  putCopyEnd (Reference c) reason = fromCopyInResult <$> LibPQ.putCopyEnd c reason
-  getCopyData (Reference c) nonBlocking = fromCopyOutResult <$> LibPQ.getCopyData c nonBlocking
-
-  loCreat (Reference c) = fmap fromOid <$> LibPQ.loCreat c
-  loCreate (Reference c) oid = fmap fromOid <$> LibPQ.loCreate c (toOid oid)
-  loImport (Reference c) path = fmap fromOid <$> LibPQ.loImport c path
-  loImportWithOid (Reference c) path oid = fmap fromOid <$> LibPQ.loImportWithOid c path (toOid oid)
-  loExport (Reference c) oid path = LibPQ.loExport c (toOid oid) path
-  loOpen (Reference c) oid mode = fmap fromLibPQLoFd <$> LibPQ.loOpen c (toOid oid) mode
-  loWrite (Reference c) fd value = LibPQ.loWrite c (toLibPQLoFd fd) value
-  loRead (Reference c) fd len = LibPQ.loRead c (toLibPQLoFd fd) len
-  loSeek (Reference c) fd mode offset = LibPQ.loSeek c (toLibPQLoFd fd) mode offset
-  loTell (Reference c) fd = LibPQ.loTell c (toLibPQLoFd fd)
-  loTruncate (Reference c) fd len = LibPQ.loTruncate c (toLibPQLoFd fd) len
-  loClose (Reference c) fd = LibPQ.loClose c (toLibPQLoFd fd)
-  loUnlink (Reference c) oid = LibPQ.loUnlink c (toOid oid)
-
-  clientEncoding (Reference c) = LibPQ.clientEncoding c
-  setClientEncoding (Reference c) encoding = LibPQ.setClientEncoding c encoding
-  setErrorVerbosity (Reference c) verbosity =
-    fromVerbosity <$> LibPQ.setErrorVerbosity c (toVerbosity verbosity)
+-- | Build a 'Pqi.Cancel' whose field closes over the given
+-- @postgresql-libpq@ cancellation handle.
+mkCancel :: LibPQ.Cancel -> Pqi.Cancel
+mkCancel handle =
+  Pqi.Cancel
+    { Pqi.cancel = LibPQ.cancel handle
+    }
 
 -- * Type conversions
 

@@ -6,17 +6,17 @@ module Pqi.Conformance.Operation.EscapeByteaConn
 where
 
 import qualified Data.ByteString as ByteString
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "escapeByteaConn" do
     it "escapes a range of binary inputs" \conninfo ->
-      differential proxy conninfo \connection ->
-        traverse (escapeByteaConn connection) byteaCases
+      differential adapter conninfo \connection ->
+        traverse connection.escapeByteaConn byteaCases
   where
     byteaCases =
       [ "",

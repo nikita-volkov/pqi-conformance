@@ -5,17 +5,17 @@ module Pqi.Conformance.Operation.Exec
   )
 where
 
-import Pqi (IsConnection)
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "exec" do
     let forCase title sql =
-          it title \conninfo -> differential proxy conninfo (execScenario sql)
+          it title \conninfo -> differential adapter conninfo (execScenario sql)
     forCase "select literal" "select 1"
     forCase "multi-row, multi-column" "select i, i * 2 from generate_series (1, 3) as i"
     forCase "nulls and text" "select null :: int4, 'hello' :: text, true"

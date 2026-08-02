@@ -6,22 +6,21 @@ module Pqi.Conformance.Operation.Fformat
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Lq.Adapter -> SpecWith ByteString
+spec adapter =
   describe "fformat" do
     it "follows the requested result format" \conninfo ->
-      differential proxy conninfo \connection -> do
+      differential adapter conninfo \connection -> do
         let formatsOf fmt =
-              execParams connection "select 1 :: int4, 'x' :: text" [] fmt
+              connection.execParams "select 1 :: int4, 'x' :: text" [] fmt
                 >>= traverse \r -> do
-                  n <- nfields r
-                  traverse (fformat r) [0 .. n - 1]
+                  n <- r.nfields
+                  traverse r.fformat [0 .. n - 1]
         textFormats <- formatsOf Lq.Text
         binaryFormats <- formatsOf Lq.Binary
         pure (textFormats, binaryFormats)

@@ -5,23 +5,23 @@ module Pqi.Conformance.Operation.DisableNoticeReporting
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "disableNoticeReporting" do
     it "stops retaining notices once disabled" \conninfo ->
-      differential proxy conninfo \connection -> do
-        enableNoticeReporting connection
+      differential adapter conninfo \connection -> do
+        connection.enableNoticeReporting
         whileEnabled <- raiseNoticeAndCollect connection
-        disableNoticeReporting connection
+        connection.disableNoticeReporting
         whileDisabled <- raiseNoticeAndCollect connection
         pure (whileEnabled, whileDisabled)
 
-raiseNoticeAndCollect :: (IsConnection c) => c -> IO Bool
+raiseNoticeAndCollect :: Pqi.Connection -> IO Bool
 raiseNoticeAndCollect connection = do
-  _ <- exec connection "do $$ begin raise notice 'conformance notice'; end $$"
-  isJust <$> getNotice connection
+  _ <- connection.exec "do $$ begin raise notice 'conformance notice'; end $$"
+  isJust <$> connection.getNotice

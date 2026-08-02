@@ -4,13 +4,13 @@ module Pqi.Conformance.Operation.Db
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "db" do
     it "reports the database name from the conninfo" \conninfo ->
-      differential proxy conninfo db
+      differential adapter conninfo (.db)

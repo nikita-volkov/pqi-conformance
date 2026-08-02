@@ -5,17 +5,17 @@ module Pqi.Conformance.Operation.Ntuples
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "ntuples" do
     it "counts rows across result shapes" \conninfo ->
-      differential proxy conninfo \connection -> do
-        let countOf sql = exec connection sql >>= traverse ntuples
+      differential adapter conninfo \connection -> do
+        let countOf sql = connection.exec sql >>= traverse (.ntuples)
         many <- countOf "select i from generate_series (1, 3) as i"
         none <- countOf "select 1 where false"
         command <- countOf "create temporary table conformance_ntuples (id int4)"

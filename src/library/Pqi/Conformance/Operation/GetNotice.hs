@@ -10,18 +10,18 @@ module Pqi.Conformance.Operation.GetNotice
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "getNotice" do
     it "yields the formatted notice while enabled and then drains" \conninfo ->
-      differential proxy conninfo \connection -> do
-        enableNoticeReporting connection
-        _ <- exec connection "do $$ begin raise notice 'conformance notice'; end $$"
-        firstNotice <- getNotice connection
-        afterDrain <- getNotice connection
+      differential adapter conninfo \connection -> do
+        connection.enableNoticeReporting
+        _ <- connection.exec "do $$ begin raise notice 'conformance notice'; end $$"
+        firstNotice <- connection.getNotice
+        afterDrain <- connection.getNotice
         pure (firstNotice, afterDrain)

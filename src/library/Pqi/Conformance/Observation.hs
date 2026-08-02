@@ -1,16 +1,16 @@
 -- | Plain, comparable snapshots of a connection or result.
 --
--- The candidate adapter and the FFI reference produce values of /different/
--- types (@'Pqi.ResultOf' candidate@ vs @'Pqi.ResultOf'
--- 'Pqi.Ffi.Connection'@), so they cannot be compared directly. Instead we
--- project each into one of these driver-independent records and compare those.
+-- Every adapter produces the same concrete 'Pqi.Connection'\/'Pqi.Result'
+-- record, so comparing candidate and reference values directly would also
+-- compare the per-connection identity fields (@backendPID@, @socket@), which
+-- are structurally incomparable across two independently-opened connections.
+-- Projecting each into one of these driver-independent records first keeps
+-- the comparison to protocol-derived information only.
 --
 -- Only protocol-derived information is captured: both adapters parse the same
--- wire bytes, so these fields genuinely agree. Per-connection identity values
--- (@backendPID@, @socket@) are structurally incomparable across connections
--- and are omitted. All result fields — including the flat error message text
--- and all structured error fields — are captured in full and compared
--- byte-identically.
+-- wire bytes, so these fields genuinely agree. All result fields — including
+-- the flat error message text and all structured error fields — are captured
+-- in full and compared byte-identically.
 module Pqi.Conformance.Observation
   ( ResultObservation (..),
     FieldObservation (..),
@@ -21,7 +21,6 @@ module Pqi.Conformance.Observation
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
 import qualified Pqi as Lq
 import Pqi.Conformance.Prelude
 
@@ -67,40 +66,40 @@ data CellObservation = CellObservation
   deriving stock (Eq, Show)
 
 -- | Project a result into a 'ResultObservation'.
-observeResult :: (IsResult r) => r -> IO ResultObservation
+observeResult :: Lq.Result -> IO ResultObservation
 observeResult result = do
-  status <- Lq.resultStatus result
+  status <- result.resultStatus
   errorFields <-
     traverse
-      (\code -> (,) code <$> Lq.resultErrorField result code)
+      (\code -> (,) code <$> result.resultErrorField code)
       [minBound .. maxBound]
-  errorMessage <- Lq.resultErrorMessage result
-  ntuples <- Lq.ntuples result
-  nfields <- Lq.nfields result
-  nparams <- Lq.nparams result
-  paramTypes <- traverse (Lq.paramtype result) [0 .. nparams - 1]
+  errorMessage <- result.resultErrorMessage
+  ntuples <- result.ntuples
+  nfields <- result.nfields
+  nparams <- result.nparams
+  paramTypes <- traverse result.paramtype [0 .. nparams - 1]
   fields <- traverse (observeField result) [0 .. nfields - 1]
   rows <- traverse (\row -> traverse (observeCell result row) [0 .. nfields - 1]) [0 .. ntuples - 1]
-  cmdStatus <- Lq.cmdStatus result
-  cmdTuples <- Lq.cmdTuples result
+  cmdStatus <- result.cmdStatus
+  cmdTuples <- result.cmdTuples
   pure ResultObservation {..}
 
-observeField :: (IsResult r) => r -> Int32 -> IO FieldObservation
+observeField :: Lq.Result -> Int32 -> IO FieldObservation
 observeField result column = do
-  name <- Lq.fname result column
-  typeOid <- Lq.ftype result column
-  modifier <- Lq.fmod result column
-  size <- Lq.fsize result column
-  format <- Lq.fformat result column
-  tableOid <- Lq.ftable result column
-  tableColumn <- Lq.ftablecol result column
+  name <- result.fname column
+  typeOid <- result.ftype column
+  modifier <- result.fmod column
+  size <- result.fsize column
+  format <- result.fformat column
+  tableOid <- result.ftable column
+  tableColumn <- result.ftablecol column
   pure FieldObservation {..}
 
-observeCell :: (IsResult r) => r -> Int32 -> Int32 -> IO CellObservation
+observeCell :: Lq.Result -> Int32 -> Int32 -> IO CellObservation
 observeCell result row column = do
-  value <- Lq.getvalue result row column
-  isNull <- Lq.getisnull result row column
-  length <- Lq.getlength result row column
+  value <- result.getvalue row column
+  isNull <- result.getisnull row column
+  length <- result.getlength row column
   pure CellObservation {..}
 
 -- | A snapshot of the comparable portion of a connection's state. The
@@ -125,20 +124,20 @@ data ConnectionObservation = ConnectionObservation
   deriving stock (Eq, Show)
 
 -- | Project a connection into a 'ConnectionObservation'.
-observeConnection :: (IsConnection c) => c -> IO ConnectionObservation
+observeConnection :: Lq.Connection -> IO ConnectionObservation
 observeConnection connection = do
-  status <- Lq.status connection
-  transactionStatus <- Lq.transactionStatus connection
-  serverVersion <- Lq.serverVersion connection
-  serverVersionParam <- Lq.parameterStatus connection "server_version"
-  protocolVersion <- Lq.protocolVersion connection
-  db <- Lq.db connection
-  user <- Lq.user connection
-  pass <- Lq.pass connection
-  host <- Lq.host connection
-  port <- Lq.port connection
-  options <- Lq.options connection
-  connectionNeedsPassword <- Lq.connectionNeedsPassword connection
-  connectionUsedPassword <- Lq.connectionUsedPassword connection
-  let isNull = Lq.isNullConnection connection
+  status <- connection.status
+  transactionStatus <- connection.transactionStatus
+  serverVersion <- connection.serverVersion
+  serverVersionParam <- connection.parameterStatus "server_version"
+  protocolVersion <- connection.protocolVersion
+  db <- connection.db
+  user <- connection.user
+  pass <- connection.pass
+  host <- connection.host
+  port <- connection.port
+  options <- connection.options
+  connectionNeedsPassword <- connection.connectionNeedsPassword
+  connectionUsedPassword <- connection.connectionUsedPassword
+  let isNull = connection.isNullConnection
   pure ConnectionObservation {..}

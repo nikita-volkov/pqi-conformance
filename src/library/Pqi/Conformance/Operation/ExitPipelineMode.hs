@@ -5,7 +5,6 @@ module Pqi.Conformance.Operation.ExitPipelineMode
   )
 where
 
-import Pqi (IsConnection (..))
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
@@ -13,25 +12,25 @@ import Pqi.Conformance.Scenario (drainResults, execScenario, float8Oid, takeComm
 import System.Timeout (timeout)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Lq.Adapter -> SpecWith ByteString
+spec adapter =
   describe "exitPipelineMode" do
     it "returns the connection to its non-pipeline status" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- enterPipelineMode connection
-        exited <- exitPipelineMode connection
-        after <- pipelineStatus connection
+      differential adapter conninfo \connection -> do
+        _ <- connection.enterPipelineMode
+        exited <- connection.exitPipelineMode
+        after <- connection.pipelineStatus
         pure (exited, after)
 
     it "fails with work pending and succeeds once drained" \conninfo ->
-      differential proxy conninfo \connection -> do
-        entered <- enterPipelineMode connection
-        sent <- sendQueryParams connection "select 1" [] Lq.Text
-        prematureExit <- exitPipelineMode connection
-        synced <- pipelineSync connection
+      differential adapter conninfo \connection -> do
+        entered <- connection.enterPipelineMode
+        sent <- connection.sendQueryParams "select 1" [] Lq.Text
+        prematureExit <- connection.exitPipelineMode
+        synced <- connection.pipelineSync
         results <- takeCommandResults connection
         syncResult <- takeResult connection
-        exited <- exitPipelineMode connection
+        exited <- connection.exitPipelineMode
         pure (entered, sent, prematureExit, synced, results, syncResult, exited)
 
     -- Reproduces the cleanup sequence that hasql's cleanUpAfterInterruption +
@@ -41,14 +40,14 @@ spec proxy =
     -- is consumed, then the connection is restored via the exact drain/sync
     -- sequence that hasql uses.
     it "recovers after mid-pipeline cancel (mirrors cleanUpAfterInterruption)" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- enterPipelineMode connection
-        _ <- sendPrepare connection "s1" "select 1" Nothing
-        _ <- sendQueryPrepared connection "s1" [] Lq.Text
-        _ <- sendPrepare connection "s2" "select pg_sleep($1)" (Just [float8Oid])
-        _ <- sendQueryPrepared connection "s2" [Just ("0.5", Lq.Text)] Lq.Text
-        _ <- pipelineSync connection
-        _ <- sendFlushRequest connection
+      differential adapter conninfo \connection -> do
+        _ <- connection.enterPipelineMode
+        _ <- connection.sendPrepare "s1" "select 1" Nothing
+        _ <- connection.sendQueryPrepared "s1" [] Lq.Text
+        _ <- connection.sendPrepare "s2" "select pg_sleep($1)" (Just [float8Oid])
+        _ <- connection.sendQueryPrepared "s2" [Just ("0.5", Lq.Text)] Lq.Text
+        _ <- connection.pipelineSync
+        _ <- connection.sendFlushRequest
         -- Consume what toPipelineIO would have read before the timeout:
         -- parse1 result + separator, exec1 result + separator, parse2 result + separator.
         _ <- takeCommandResults connection
@@ -56,17 +55,17 @@ spec proxy =
         _ <- takeCommandResults connection
         -- exec2 (pg_sleep) is still running; cancel it to simulate the
         -- timeout-triggered cancel in cleanUpAfterInterruption.
-        mHandle <- getCancel connection
-        _ <- for mHandle Lq.cancel
+        mHandle <- connection.getCancel
+        _ <- for mHandle (.cancel)
         -- cleanUpAfterInterruption: drain1, then drain2 (after cancel)
         _ <- drainResults connection
         _ <- drainResults connection
         -- leavePipeline: new Sync, drain, Flush, drain
-        _ <- pipelineSync connection
+        _ <- connection.pipelineSync
         _ <- drainResults connection
-        _ <- sendFlushRequest connection
+        _ <- connection.sendFlushRequest
         _ <- drainResults connection
-        exited <- exitPipelineMode connection
+        exited <- connection.exitPipelineMode
         pure exited
 
     -- Reproduces the failure seen in hasql's "Leaves the connection usable
@@ -82,36 +81,36 @@ spec proxy =
     -- currently fails to leave pipeline mode, which is the bug this scenario
     -- captures.
     it "recovers after timeout interrupts mid-pipeline read" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- enterPipelineMode connection
-        _ <- sendPrepare connection "s1" "select $1::int" Nothing
-        _ <- sendQueryPrepared connection "s1" [Just ("42", Lq.Text)] Lq.Text
-        _ <- sendPrepare connection "s2" "select pg_sleep($1)" (Just [float8Oid])
-        _ <- sendQueryPrepared connection "s2" [Just ("0.1", Lq.Text)] Lq.Text
-        _ <- pipelineSync connection
+      differential adapter conninfo \connection -> do
+        _ <- connection.enterPipelineMode
+        _ <- connection.sendPrepare "s1" "select $1::int" Nothing
+        _ <- connection.sendQueryPrepared "s1" [Just ("42", Lq.Text)] Lq.Text
+        _ <- connection.sendPrepare "s2" "select pg_sleep($1)" (Just [float8Oid])
+        _ <- connection.sendQueryPrepared "s2" [Just ("0.1", Lq.Text)] Lq.Text
+        _ <- connection.pipelineSync
         -- Interrupt the read just like hasql's Connection.use + timeout does.
         _ <- timeout 50000 (drainResults connection)
         -- cleanUpAfterInterruption
         _ <- drainResults connection
-        mHandle <- getCancel connection
-        _ <- for mHandle Lq.cancel
+        mHandle <- connection.getCancel
+        _ <- for mHandle (.cancel)
         _ <- drainResults connection
         -- leavePipeline (including the retry that hasql performs)
-        pipelineStatusBefore <- pipelineStatus connection
+        pipelineStatusBefore <- connection.pipelineStatus
         exited <-
           if pipelineStatusBefore == Lq.PipelineOn
             then do
-              _ <- pipelineSync connection
+              _ <- connection.pipelineSync
               _ <- drainResults connection
-              _ <- sendFlushRequest connection
+              _ <- connection.sendFlushRequest
               _ <- drainResults connection
-              ok <- exitPipelineMode connection
+              ok <- connection.exitPipelineMode
               if ok
                 then pure True
                 else do
                   _ <- drainResults connection
-                  exitPipelineMode connection
+                  connection.exitPipelineMode
             else pure True
-        afterStatus <- pipelineStatus connection
+        afterStatus <- connection.pipelineStatus
         usable <- execScenario "select 99" connection
         pure (exited, afterStatus, usable)

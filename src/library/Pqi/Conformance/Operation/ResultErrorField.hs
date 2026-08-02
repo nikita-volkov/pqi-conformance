@@ -10,17 +10,17 @@ module Pqi.Conformance.Operation.ResultErrorField
   )
 where
 
-import Pqi (IsConnection)
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (execAllScenario, execScenario)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "resultErrorField" do
     let forCase title sql =
-          it title \conninfo -> differential proxy conninfo (execScenario sql)
+          it title \conninfo -> differential adapter conninfo (execScenario sql)
     forCase "syntax error" "selct 1"
     forCase "undefined table" "select * from pqi_no_such_table"
     forCase "undefined column" "select no_such_column from (select 1) as t"
@@ -33,7 +33,7 @@ spec proxy =
     forCase "value too long" "select 'abc' :: varchar(2)"
 
     it "constraint violations" \conninfo ->
-      differential proxy conninfo
+      differential adapter conninfo
         $ execAllScenario
           [ "create temporary table conformance_errors (id int4 primary key, label text not null)",
             "insert into conformance_errors values (1, 'a')",
@@ -42,5 +42,5 @@ spec proxy =
           ]
 
     it "a failed transaction block rejects further commands" \conninfo ->
-      differential proxy conninfo
+      differential adapter conninfo
         $ execAllScenario ["begin", "select 1 / 0", "select 1", "rollback", "select 1"]
