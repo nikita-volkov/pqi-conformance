@@ -17,11 +17,11 @@ spec adapter =
   describe "sendFlushRequest" do
     it "delivers results without a sync" \conninfo ->
       differential adapter conninfo \connection -> do
-        entered <- connection.enterPipelineMode
-        sent <- connection.sendQueryParams "select 42" [] Lq.Text
-        flushRequested <- connection.sendFlushRequest
+        entered <- connection . enterPipelineMode
+        sent <- connection . sendQueryParams "select 42" [] Lq.Text
+        flushRequested <- connection . sendFlushRequest
         results <- takeCommandResults connection
-        synced <- connection.pipelineSync
+        synced <- connection . pipelineSync
         syncResult <- takeResult connection
-        exited <- connection.exitPipelineMode
+        exited <- connection . exitPipelineMode
         pure (entered, sent, flushRequested, results, synced, syncResult, exited)

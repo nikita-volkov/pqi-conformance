@@ -13,4 +13,4 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
   describe "db" do
     it "reports the database name from the conninfo" \conninfo ->
-      differential adapter conninfo (.db)
+      differential adapter conninfo (. db)

@@ -15,7 +15,7 @@ spec adapter =
   describe "resultStatus" do
     it "reports the status for each kind of result" \conninfo ->
       differential adapter conninfo \connection -> do
-        let statusOf sql = connection.exec sql >>= traverse (.resultStatus)
+        let statusOf sql = connection . exec sql >>= traverse (. resultStatus)
         tuples <- statusOf "select 1"
         command <- statusOf "create temporary table conformance_status (id int4)"
         empty <- statusOf ""

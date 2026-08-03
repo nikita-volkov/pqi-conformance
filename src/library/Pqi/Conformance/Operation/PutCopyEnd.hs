@@ -16,20 +16,20 @@ spec adapter =
   describe "putCopyEnd" do
     it "commits the copied rows when ended without an error" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "create temporary table conformance_copy_end (id int4)"
+        _ <- connection . exec "create temporary table conformance_copy_end (id int4)"
         started <- execScenario "copy conformance_copy_end from stdin" connection
-        row <- connection.putCopyData "1\n"
-        ended <- connection.putCopyEnd Nothing
+        row <- connection . putCopyData "1\n"
+        ended <- connection . putCopyEnd Nothing
         outcome <- drainResults connection
         check <- execScenario "select count(*) from conformance_copy_end" connection
         pure (started, row, ended, outcome, check)
 
     it "aborts the copy when ended with an error" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "create temporary table conformance_copy_abort (id int4)"
+        _ <- connection . exec "create temporary table conformance_copy_abort (id int4)"
         started <- execScenario "copy conformance_copy_abort from stdin" connection
-        row <- connection.putCopyData "1\n"
-        ended <- connection.putCopyEnd (Just "conformance abort")
+        row <- connection . putCopyData "1\n"
+        ended <- connection . putCopyEnd (Just "conformance abort")
         outcome <- drainResults connection
         check <- execScenario "select count(*) from conformance_copy_abort" connection
         pure (started, row, ended, outcome, check)

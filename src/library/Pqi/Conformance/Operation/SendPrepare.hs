@@ -16,6 +16,6 @@ spec adapter =
   describe "sendPrepare" do
     it "prepares a statement asynchronously" \conninfo ->
       differential adapter conninfo \connection -> do
-        sent <- connection.sendPrepare "conformance_send_prepare" "select $1 :: int4 * 2" Nothing
+        sent <- connection . sendPrepare "conformance_send_prepare" "select $1 :: int4 * 2" Nothing
         results <- drainResults connection
         pure (sent, results)

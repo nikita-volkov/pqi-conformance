@@ -18,16 +18,16 @@ spec adapter =
     it "reports the position after a write and a seek" \conninfo ->
       differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- connection.loCreat
+          oid <- connection . loCreat
           outcome <- for oid \o -> do
-            fd <- connection.loOpen o ReadWriteMode
+            fd <- connection . loOpen o ReadWriteMode
             positions <- for fd \f -> do
-              _ <- connection.loWrite f "hello, large object"
-              afterWrite <- connection.loTell f
-              _ <- connection.loSeek f AbsoluteSeek 3
-              afterSeek <- connection.loTell f
+              _ <- connection . loWrite f "hello, large object"
+              afterWrite <- connection . loTell f
+              _ <- connection . loSeek f AbsoluteSeek 3
+              afterSeek <- connection . loTell f
               pure (afterWrite, afterSeek)
-            traverse_ connection.loClose fd
+            traverse_ connection . loClose fd
             pure positions
-          traverse_ connection.loUnlink oid
+          traverse_ connection . loUnlink oid
           pure outcome

@@ -17,11 +17,11 @@ spec adapter =
   describe "clientEncoding" do
     it "round-trips and governs result re-encoding" \conninfo ->
       differential adapter conninfo \connection -> do
-        initial <- connection.clientEncoding
-        setOk <- connection.setClientEncoding "LATIN1"
-        switched <- connection.clientEncoding
-        reported <- connection.parameterStatus "client_encoding"
+        initial <- connection . clientEncoding
+        setOk <- connection . setClientEncoding "LATIN1"
+        switched <- connection . clientEncoding
+        reported <- connection . parameterStatus "client_encoding"
         latinCell <- execScenario "select chr(233) as e" connection
-        restoreOk <- connection.setClientEncoding "UTF8"
+        restoreOk <- connection . setClientEncoding "UTF8"
         utfCell <- execScenario "select chr(233) as e" connection
         pure (initial, setOk, switched, reported, latinCell, restoreOk, utfCell)

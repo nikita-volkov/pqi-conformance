@@ -17,10 +17,11 @@ spec adapter =
     it "follows the requested result format" \conninfo ->
       differential adapter conninfo \connection -> do
         let formatsOf fmt =
-              connection.execParams "select 1 :: int4, 'x' :: text" [] fmt
+              connection
+                . execParams "select 1 :: int4, 'x' :: text" [] fmt
                 >>= traverse \r -> do
-                  n <- r.nfields
-                  traverse r.fformat [0 .. n - 1]
+                  n <- r . nfields
+                  traverse r . fformat [0 .. n - 1]
         textFormats <- formatsOf Lq.Text
         binaryFormats <- formatsOf Lq.Binary
         pure (textFormats, binaryFormats)

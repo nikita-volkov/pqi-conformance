@@ -17,4 +17,4 @@ spec adapter =
   describe "socket" do
     it "is present on an open connection" \conninfo ->
       differential adapter conninfo \connection ->
-        isJust <$> connection.socket
+        isJust <$> connection . socket

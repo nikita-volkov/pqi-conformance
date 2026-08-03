@@ -13,4 +13,4 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
   describe "host" do
     it "reports the host from the conninfo" \conninfo ->
-      differential adapter conninfo (.host)
+      differential adapter conninfo (. host)

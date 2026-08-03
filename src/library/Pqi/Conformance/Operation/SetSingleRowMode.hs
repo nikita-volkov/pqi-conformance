@@ -16,14 +16,14 @@ spec adapter =
   describe "setSingleRowMode" do
     it "splits a multi-row result into single-row results" \conninfo ->
       differential adapter conninfo \connection -> do
-        sent <- connection.sendQuery "select i from generate_series (1, 3) as i"
-        singleRow <- connection.setSingleRowMode
+        sent <- connection . sendQuery "select i from generate_series (1, 3) as i"
+        singleRow <- connection . setSingleRowMode
         results <- drainResults connection
         pure (sent, singleRow, results)
 
     it "handles an empty result" \conninfo ->
       differential adapter conninfo \connection -> do
-        sent <- connection.sendQuery "select 1 where false"
-        singleRow <- connection.setSingleRowMode
+        sent <- connection . sendQuery "select 1 where false"
+        singleRow <- connection . setSingleRowMode
         results <- drainResults connection
         pure (sent, singleRow, results)

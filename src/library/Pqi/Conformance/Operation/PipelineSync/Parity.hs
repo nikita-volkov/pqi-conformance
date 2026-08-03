@@ -25,13 +25,13 @@ spec adapter =
       differential adapter conninfo \connection -> do
         let query = "SELECT 1, 2"
         sequential <- replicateM 100 (observed query [] Lq.Text connection)
-        entered <- connection.enterPipelineMode
-        sent <- replicateM 100 (connection.sendQueryParams query [] Lq.Text)
-        synced <- connection.pipelineSync
+        entered <- connection . enterPipelineMode
+        sent <- replicateM 100 (connection . sendQueryParams query [] Lq.Text)
+        synced <- connection . pipelineSync
         pipeline <- replicateM 100 (takeCommandResults connection)
         syncResult <- takeResult connection
         trailing <- takeResult connection
-        exited <- connection.exitPipelineMode
+        exited <- connection . exitPipelineMode
         let pipelineResults = map fst pipeline
         sequential `shouldBe` pipelineResults
         pure (entered, sent, synced, pipeline, syncResult, trailing, exited, sequential)
@@ -40,13 +40,13 @@ spec adapter =
       differential adapter conninfo \connection -> do
         let query = "SELECT generate_series(0,1000) as a, generate_series(1000,2000) as b"
         sequential <- replicateM 100 (observed query [] Lq.Text connection)
-        entered <- connection.enterPipelineMode
-        sent <- replicateM 100 (connection.sendQueryParams query [] Lq.Text)
-        synced <- connection.pipelineSync
+        entered <- connection . enterPipelineMode
+        sent <- replicateM 100 (connection . sendQueryParams query [] Lq.Text)
+        synced <- connection . pipelineSync
         pipeline <- replicateM 100 (takeCommandResults connection)
         syncResult <- takeResult connection
         trailing <- takeResult connection
-        exited <- connection.exitPipelineMode
+        exited <- connection . exitPipelineMode
         let pipelineResults = map fst pipeline
         sequential `shouldBe` pipelineResults
         pure (entered, sent, synced, pipeline, syncResult, trailing, exited, sequential)

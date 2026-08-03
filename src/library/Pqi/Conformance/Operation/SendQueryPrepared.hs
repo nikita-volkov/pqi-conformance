@@ -17,8 +17,8 @@ spec adapter =
   describe "sendQueryPrepared" do
     it "executes a prepared statement asynchronously" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.sendPrepare "conformance_send_exec" "select $1 :: int4 * 2" Nothing
+        _ <- connection . sendPrepare "conformance_send_exec" "select $1 :: int4 * 2" Nothing
         _ <- drainResults connection
-        sent <- connection.sendQueryPrepared "conformance_send_exec" [Just ("21", Lq.Text)] Lq.Text
+        sent <- connection . sendQueryPrepared "conformance_send_exec" [Just ("21", Lq.Text)] Lq.Text
         results <- drainResults connection
         pure (sent, results)

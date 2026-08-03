@@ -15,7 +15,7 @@ spec adapter =
   describe "nfields" do
     it "counts columns across result shapes" \conninfo ->
       differential adapter conninfo \connection -> do
-        let countOf sql = connection.exec sql >>= traverse (.nfields)
+        let countOf sql = connection . exec sql >>= traverse (. nfields)
         several <- countOf "select 1, 2, 3"
         zero <- countOf "select"
         command <- countOf "create temporary table conformance_nfields (id int4)"

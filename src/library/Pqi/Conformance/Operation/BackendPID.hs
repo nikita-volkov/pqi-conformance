@@ -17,4 +17,4 @@ spec adapter =
   describe "backendPID" do
     it "is positive on an open connection" \conninfo ->
       differential adapter conninfo \connection ->
-        (> 0) <$> connection.backendPID
+        (> 0) <$> connection . backendPID

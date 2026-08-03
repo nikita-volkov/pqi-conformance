@@ -16,8 +16,8 @@ spec adapter =
   describe "setClientEncoding" do
     it "rejects an unknown encoding and leaves the session usable" \conninfo ->
       differential adapter conninfo \connection -> do
-        rejected <- connection.setClientEncoding "BOGUS_ENCODING"
-        unchanged <- connection.clientEncoding
-        stillIdle <- connection.transactionStatus
+        rejected <- connection . setClientEncoding "BOGUS_ENCODING"
+        unchanged <- connection . clientEncoding
+        stillIdle <- connection . transactionStatus
         stillWorks <- execScenario "select 1" connection
         pure (rejected, unchanged, stillIdle, stillWorks)

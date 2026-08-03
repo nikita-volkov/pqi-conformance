@@ -16,11 +16,11 @@ spec adapter =
   describe "isBusy" do
     it "settles to not-busy after the result arrives" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.sendQuery "select 42"
-        let settle (0 :: Int) = connection.isBusy
+        _ <- connection . sendQuery "select 42"
+        let settle (0 :: Int) = connection . isBusy
             settle n = do
-              _ <- connection.consumeInput
-              busy <- connection.isBusy
+              _ <- connection . consumeInput
+              busy <- connection . isBusy
               if busy then threadDelay 1000 >> settle (n - 1) else pure busy
         stillBusy <- settle 10000
         _ <- drainResults connection

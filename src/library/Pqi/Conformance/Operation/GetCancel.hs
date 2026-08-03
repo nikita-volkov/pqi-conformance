@@ -15,4 +15,4 @@ spec adapter =
   describe "getCancel" do
     it "produces a handle for an open connection" \conninfo ->
       differential adapter conninfo \connection ->
-        isJust <$> connection.getCancel
+        isJust <$> connection . getCancel

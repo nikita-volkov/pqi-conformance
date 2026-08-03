@@ -16,7 +16,7 @@ spec adapter =
   describe "getResult" do
     it "yields each result then a Nothing terminator" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.sendQuery "select 1 :: int4"
+        _ <- connection . sendQuery "select 1 :: int4"
         first <- takeResult connection
         terminator <- takeResult connection
         afterTerminator <- takeResult connection

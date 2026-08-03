@@ -18,11 +18,11 @@ spec adapter =
     it "closes the descriptor and invalidates further reads" \conninfo ->
       differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- connection.loCreat
+          oid <- connection . loCreat
           outcome <- for oid \o -> do
-            fd <- connection.loOpen o ReadMode
-            closed <- for fd (connection.loClose)
-            readAfterClose <- join <$> for fd \f -> connection.loRead f 10
+            fd <- connection . loOpen o ReadMode
+            closed <- for fd (connection . loClose)
+            readAfterClose <- join <$> for fd \f -> connection . loRead f 10
             pure (closed, readAfterClose)
-          traverse_ connection.loUnlink oid
+          traverse_ connection . loUnlink oid
           pure outcome

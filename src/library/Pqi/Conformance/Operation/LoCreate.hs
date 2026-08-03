@@ -22,9 +22,9 @@ spec adapter =
         inTransaction connection do
           -- Best-effort cleanup of leftovers from an earlier crashed run; its
           -- outcome legitimately differs between runs, so it is not observed.
-          _ <- connection.loUnlink explicitOid
-          created <- connection.loCreate explicitOid
-          unlinked <- for created connection.loUnlink
+          _ <- connection . loUnlink explicitOid
+          created <- connection . loCreate explicitOid
+          unlinked <- for created connection . loUnlink
           pure (created, unlinked)
   where
     explicitOid = 424242

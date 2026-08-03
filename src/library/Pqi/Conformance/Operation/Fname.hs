@@ -15,9 +15,9 @@ spec adapter =
   describe "fname" do
     it "names columns and degrades out of range" \conninfo ->
       differential adapter conninfo \connection -> do
-        result <- connection.exec "select 1 as foo, 2 as bar"
+        result <- connection . exec "select 1 as foo, 2 as bar"
         for result \r -> do
-          n <- r.nfields
-          names <- traverse r.fname [0 .. n - 1]
-          outOfRange <- r.fname 5
+          n <- r . nfields
+          names <- traverse r . fname [0 .. n - 1]
+          outOfRange <- r . fname 5
           pure (names, outOfRange)

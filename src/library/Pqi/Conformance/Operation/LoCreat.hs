@@ -20,6 +20,6 @@ spec adapter =
     it "creates a large object" \conninfo ->
       differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- connection.loCreat
-          traverse_ connection.loUnlink oid
+          oid <- connection . loCreat
+          traverse_ connection . loUnlink oid
           pure (isJust oid)

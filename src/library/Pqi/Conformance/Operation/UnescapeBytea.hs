@@ -16,8 +16,8 @@ spec adapter =
   describe "unescapeBytea" do
     for_ cases \input ->
       it (show input) \_ -> do
-        candidate <- adapter.unescapeBytea input
-        reference <- Reference.adapter.unescapeBytea input
+        candidate <- adapter . unescapeBytea input
+        reference <- Reference.adapter . unescapeBytea input
         candidate `shouldBe` reference
   where
     cases =

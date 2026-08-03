@@ -15,11 +15,11 @@ spec adapter =
   describe "transactionStatus" do
     it "tracks status through a transaction" \conninfo ->
       differential adapter conninfo \connection -> do
-        idle <- connection.transactionStatus
-        _ <- connection.exec "begin"
-        inTransaction <- connection.transactionStatus
-        _ <- connection.exec "select 1 / 0"
-        inError <- connection.transactionStatus
-        _ <- connection.exec "rollback"
-        afterRollback <- connection.transactionStatus
+        idle <- connection . transactionStatus
+        _ <- connection . exec "begin"
+        inTransaction <- connection . transactionStatus
+        _ <- connection . exec "select 1 / 0"
+        inError <- connection . transactionStatus
+        _ <- connection . exec "rollback"
+        afterRollback <- connection . transactionStatus
         pure (idle, inTransaction, inError, afterRollback)

@@ -16,8 +16,9 @@ spec adapter =
   describe "fnumber" do
     it "resolves names like an identifier" \conninfo ->
       differential adapter conninfo \connection -> do
-        result <- connection.exec "select 1 as foo, 2 as \"Bar\""
+        result <- connection . exec "select 1 as foo, 2 as \"Bar\""
         for result \r ->
           traverse
-            r.fnumber
-            ["foo", "FOO", "Foo", "Bar", "bar", "\"Bar\"", "\"foo\"", "missing"]
+            r
+            . fnumber
+              ["foo", "FOO", "Foo", "Bar", "bar", "\"Bar\"", "\"foo\"", "missing"]

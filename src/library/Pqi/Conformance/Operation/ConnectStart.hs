@@ -17,8 +17,8 @@ spec adapter =
   describe "connectStart" do
     it "begins an asynchronous connection that polls to readiness" \conninfo ->
       differentialConnect adapter conninfo \adapter' conninfo' -> do
-        connection <- adapter'.connectStart conninfo'
-        polled <- pollUntilDone connection.connectPoll
+        connection <- adapter' . connectStart conninfo'
+        polled <- pollUntilDone connection . connectPoll
         observation <- observeConnection connection
-        connection.finish
+        connection . finish
         pure (polled, observation)

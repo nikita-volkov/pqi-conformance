@@ -15,13 +15,13 @@ spec adapter =
   describe "finish" do
     it "closes an open connection cleanly" \conninfo ->
       differentialConnect adapter conninfo \adapter' conninfo' -> do
-        connection <- adapter'.connectdb conninfo'
-        before <- connection.status
-        connection.finish
+        connection <- adapter' . connectdb conninfo'
+        before <- connection . status
+        connection . finish
         pure before
 
     it "closes the null sentinel cleanly" \conninfo ->
       differentialConnect adapter conninfo \adapter' _ -> do
-        connection <- adapter'.newNullConnection
-        connection.finish
+        connection <- adapter' . newNullConnection
+        connection . finish
         pure ()

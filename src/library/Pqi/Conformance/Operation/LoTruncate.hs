@@ -18,15 +18,15 @@ spec adapter =
     it "truncates to a new size" \conninfo ->
       differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- connection.loCreat
+          oid <- connection . loCreat
           outcome <- for oid \o -> do
-            fd <- connection.loOpen o ReadWriteMode
+            fd <- connection . loOpen o ReadWriteMode
             result <- for fd \f -> do
-              _ <- connection.loWrite f "hello, large object"
-              truncated <- connection.loTruncate f 5
-              newEnd <- connection.loSeek f SeekFromEnd 0
+              _ <- connection . loWrite f "hello, large object"
+              truncated <- connection . loTruncate f 5
+              newEnd <- connection . loSeek f SeekFromEnd 0
               pure (truncated, newEnd)
-            traverse_ connection.loClose fd
+            traverse_ connection . loClose fd
             pure result
-          traverse_ connection.loUnlink oid
+          traverse_ connection . loUnlink oid
           pure outcome

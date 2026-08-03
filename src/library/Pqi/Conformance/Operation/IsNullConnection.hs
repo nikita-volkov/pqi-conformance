@@ -15,10 +15,10 @@ spec adapter =
   describe "isNullConnection" do
     it "is True for the null sentinel and False for an open connection" \conninfo ->
       differentialConnect adapter conninfo \adapter' conninfo' -> do
-        nullConn <- adapter'.newNullConnection
-        let nullIsNull = nullConn.isNullConnection
-        nullConn.finish
-        openConn <- adapter'.connectdb conninfo'
-        let openIsNull = openConn.isNullConnection
-        openConn.finish
+        nullConn <- adapter' . newNullConnection
+        let nullIsNull = nullConn . isNullConnection
+        nullConn . finish
+        openConn <- adapter' . connectdb conninfo'
+        let openIsNull = openConn . isNullConnection
+        openConn . finish
         pure (nullIsNull, openIsNull)

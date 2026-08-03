@@ -15,13 +15,13 @@ spec adapter =
   describe "disableNoticeReporting" do
     it "stops retaining notices once disabled" \conninfo ->
       differential adapter conninfo \connection -> do
-        connection.enableNoticeReporting
+        connection . enableNoticeReporting
         whileEnabled <- raiseNoticeAndCollect connection
-        connection.disableNoticeReporting
+        connection . disableNoticeReporting
         whileDisabled <- raiseNoticeAndCollect connection
         pure (whileEnabled, whileDisabled)
 
 raiseNoticeAndCollect :: Pqi.Connection -> IO Bool
 raiseNoticeAndCollect connection = do
-  _ <- connection.exec "do $$ begin raise notice 'conformance notice'; end $$"
-  isJust <$> connection.getNotice
+  _ <- connection . exec "do $$ begin raise notice 'conformance notice'; end $$"
+  isJust <$> connection . getNotice

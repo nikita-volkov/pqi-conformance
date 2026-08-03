@@ -14,4 +14,4 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
   describe "options" do
     it "reports the command-line options from the conninfo" \conninfo ->
-      differential adapter conninfo (.options)
+      differential adapter conninfo (. options)

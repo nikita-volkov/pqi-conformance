@@ -13,4 +13,4 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
   describe "port" do
     it "reports the port from the conninfo" \conninfo ->
-      differential adapter conninfo (.port)
+      differential adapter conninfo (. port)

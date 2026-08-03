@@ -17,7 +17,7 @@ spec adapter =
     it "removes an existing object and rejects a missing one" \conninfo ->
       differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- connection.loCreat
-          removed <- for oid connection.loUnlink
-          missing <- connection.loUnlink 4242424
+          oid <- connection . loCreat
+          removed <- for oid connection . loUnlink
+          missing <- connection . loUnlink 4242424
           pure (removed, missing)

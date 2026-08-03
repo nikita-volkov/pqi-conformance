@@ -14,4 +14,4 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
   describe "connectionNeedsPassword" do
     it "reports whether a password was needed" \conninfo ->
-      differential adapter conninfo (.connectionNeedsPassword)
+      differential adapter conninfo (. connectionNeedsPassword)

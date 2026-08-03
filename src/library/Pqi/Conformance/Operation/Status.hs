@@ -13,4 +13,4 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
   describe "status" do
     it "reports a ready connection as OK" \conninfo ->
-      differential adapter conninfo (.status)
+      differential adapter conninfo (. status)

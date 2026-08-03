@@ -16,7 +16,7 @@ spec adapter =
   describe "setErrorVerbosity" do
     it "returns the previous setting" \conninfo ->
       differential adapter conninfo \connection -> do
-        beforeTerse <- connection.setErrorVerbosity Lq.ErrorsTerse
-        beforeVerbose <- connection.setErrorVerbosity Lq.ErrorsVerbose
-        beforeDefault <- connection.setErrorVerbosity Lq.ErrorsDefault
+        beforeTerse <- connection . setErrorVerbosity Lq.ErrorsTerse
+        beforeVerbose <- connection . setErrorVerbosity Lq.ErrorsVerbose
+        beforeDefault <- connection . setErrorVerbosity Lq.ErrorsDefault
         pure (beforeTerse, beforeVerbose, beforeDefault)

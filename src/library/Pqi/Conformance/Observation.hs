@@ -68,38 +68,38 @@ data CellObservation = CellObservation
 -- | Project a result into a 'ResultObservation'.
 observeResult :: Lq.Result -> IO ResultObservation
 observeResult result = do
-  status <- result.resultStatus
+  status <- result . resultStatus
   errorFields <-
     traverse
-      (\code -> (,) code <$> result.resultErrorField code)
+      (\code -> (,) code <$> result . resultErrorField code)
       [minBound .. maxBound]
-  errorMessage <- result.resultErrorMessage
-  ntuples <- result.ntuples
-  nfields <- result.nfields
-  nparams <- result.nparams
-  paramTypes <- traverse result.paramtype [0 .. nparams - 1]
+  errorMessage <- result . resultErrorMessage
+  ntuples <- result . ntuples
+  nfields <- result . nfields
+  nparams <- result . nparams
+  paramTypes <- traverse result . paramtype [0 .. nparams - 1]
   fields <- traverse (observeField result) [0 .. nfields - 1]
   rows <- traverse (\row -> traverse (observeCell result row) [0 .. nfields - 1]) [0 .. ntuples - 1]
-  cmdStatus <- result.cmdStatus
-  cmdTuples <- result.cmdTuples
+  cmdStatus <- result . cmdStatus
+  cmdTuples <- result . cmdTuples
   pure ResultObservation {..}
 
 observeField :: Lq.Result -> Int32 -> IO FieldObservation
 observeField result column = do
-  name <- result.fname column
-  typeOid <- result.ftype column
-  modifier <- result.fmod column
-  size <- result.fsize column
-  format <- result.fformat column
-  tableOid <- result.ftable column
-  tableColumn <- result.ftablecol column
+  name <- result . fname column
+  typeOid <- result . ftype column
+  modifier <- result . fmod column
+  size <- result . fsize column
+  format <- result . fformat column
+  tableOid <- result . ftable column
+  tableColumn <- result . ftablecol column
   pure FieldObservation {..}
 
 observeCell :: Lq.Result -> Int32 -> Int32 -> IO CellObservation
 observeCell result row column = do
-  value <- result.getvalue row column
-  isNull <- result.getisnull row column
-  length <- result.getlength row column
+  value <- result . getvalue row column
+  isNull <- result . getisnull row column
+  length <- result . getlength row column
   pure CellObservation {..}
 
 -- | A snapshot of the comparable portion of a connection's state. The
@@ -126,18 +126,18 @@ data ConnectionObservation = ConnectionObservation
 -- | Project a connection into a 'ConnectionObservation'.
 observeConnection :: Lq.Connection -> IO ConnectionObservation
 observeConnection connection = do
-  status <- connection.status
-  transactionStatus <- connection.transactionStatus
-  serverVersion <- connection.serverVersion
-  serverVersionParam <- connection.parameterStatus "server_version"
-  protocolVersion <- connection.protocolVersion
-  db <- connection.db
-  user <- connection.user
-  pass <- connection.pass
-  host <- connection.host
-  port <- connection.port
-  options <- connection.options
-  connectionNeedsPassword <- connection.connectionNeedsPassword
-  connectionUsedPassword <- connection.connectionUsedPassword
-  let isNull = connection.isNullConnection
+  status <- connection . status
+  transactionStatus <- connection . transactionStatus
+  serverVersion <- connection . serverVersion
+  serverVersionParam <- connection . parameterStatus "server_version"
+  protocolVersion <- connection . protocolVersion
+  db <- connection . db
+  user <- connection . user
+  pass <- connection . pass
+  host <- connection . host
+  port <- connection . port
+  options <- connection . options
+  connectionNeedsPassword <- connection . connectionNeedsPassword
+  connectionUsedPassword <- connection . connectionUsedPassword
+  let isNull = connection . isNullConnection
   pure ConnectionObservation {..}

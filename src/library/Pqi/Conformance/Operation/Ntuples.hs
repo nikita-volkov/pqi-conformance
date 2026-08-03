@@ -15,7 +15,7 @@ spec adapter =
   describe "ntuples" do
     it "counts rows across result shapes" \conninfo ->
       differential adapter conninfo \connection -> do
-        let countOf sql = connection.exec sql >>= traverse (.ntuples)
+        let countOf sql = connection . exec sql >>= traverse (. ntuples)
         many <- countOf "select i from generate_series (1, 3) as i"
         none <- countOf "select 1 where false"
         command <- countOf "create temporary table conformance_ntuples (id int4)"
