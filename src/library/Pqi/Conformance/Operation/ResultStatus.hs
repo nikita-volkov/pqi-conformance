@@ -5,17 +5,17 @@ module Pqi.Conformance.Operation.ResultStatus
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "resultStatus" do
     it "reports the status for each kind of result" \conninfo ->
-      differential proxy conninfo \connection -> do
-        let statusOf sql = exec connection sql >>= traverse resultStatus
+      differential adapter conninfo \connection -> do
+        let statusOf sql = connection.exec sql >>= traverse (.resultStatus)
         tuples <- statusOf "select 1"
         command <- statusOf "create temporary table conformance_status (id int4)"
         empty <- statusOf ""

@@ -6,7 +6,6 @@ module Pqi.Conformance.Operation.ExecParams
   )
 where
 
-import Pqi (IsConnection (..))
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
@@ -14,31 +13,31 @@ import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Lq.Adapter -> SpecWith ByteString
+spec adapter =
   describe "execParams" do
     it "text result format" \conninfo ->
-      differential proxy conninfo (paramsScenario Lq.Text)
+      differential adapter conninfo (paramsScenario Lq.Text)
     it "binary result format" \conninfo ->
-      differential proxy conninfo (paramsScenario Lq.Binary)
+      differential adapter conninfo (paramsScenario Lq.Binary)
     it "null parameter" \conninfo ->
-      differential proxy conninfo (observed "select $1 :: int4 as maybe_value" [Nothing] Lq.Text)
+      differential adapter conninfo (observed "select $1 :: int4 as maybe_value" [Nothing] Lq.Text)
     it "no parameters" \conninfo ->
-      differential proxy conninfo (observed "select 'none' :: text" [] Lq.Text)
+      differential adapter conninfo (observed "select 'none' :: text" [] Lq.Text)
     it "binary parameter" \conninfo ->
-      differential proxy conninfo
+      differential adapter conninfo
         $ observed "select $1 :: int4 * 2" [Just (int4Oid, "\NUL\NUL\NUL*", Lq.Binary)] Lq.Text
     it "binary bytea round-trip" \conninfo ->
-      differential proxy conninfo
+      differential adapter conninfo
         $ observed "select $1 :: bytea" [Just (byteaOid, "\NUL\1\2\255", Lq.Binary)] Lq.Binary
     it "inferred parameter type" \conninfo ->
-      differential proxy conninfo
+      differential adapter conninfo
         $ observed "select $1 :: int4 + 1" [Just (0, "41", Lq.Text)] Lq.Text
     it "empty string is not null" \conninfo ->
-      differential proxy conninfo
+      differential adapter conninfo
         $ observed "select $1 :: text, length ($1 :: text)" [Just (textOid, "", Lq.Text)] Lq.Text
     it "many mixed parameters" \conninfo ->
-      differential proxy conninfo
+      differential adapter conninfo
         $ observed
           "select $1 :: int8, $2 :: float8, $3 :: bool, $4 :: text, $5 :: int4, $6 :: text"
           [ Just (int8Oid, "9000000000000000000", Lq.Text),
@@ -50,8 +49,8 @@ spec proxy =
           ]
           Lq.Text
     it "DML with parameters" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- exec connection "create temporary table conformance_exec_params (id int4)"
+      differential adapter conninfo \connection -> do
+        _ <- connection.exec "create temporary table conformance_exec_params (id int4)"
         insert <-
           observed
             "insert into conformance_exec_params values ($1), ($2)"
@@ -66,15 +65,15 @@ spec proxy =
             connection
         pure (insert, check)
     it "too few parameters" \conninfo ->
-      differential proxy conninfo
+      differential adapter conninfo
         $ observed "select $1 :: int4 + $2 :: int4" [Just (int4Oid, "1", Lq.Text)] Lq.Text
     it "malformed parameter value" \conninfo ->
-      differential proxy conninfo
+      differential adapter conninfo
         $ observed "select $1 :: int4" [Just (int4Oid, "not-a-number", Lq.Text)] Lq.Text
     it "multiple statements are rejected" \conninfo ->
-      differential proxy conninfo (observed "select 1; select 2" [] Lq.Text)
+      differential adapter conninfo (observed "select 1; select 2" [] Lq.Text)
 
-paramsScenario :: (IsConnection c) => Lq.Format -> c -> IO (Maybe ResultObservation)
+paramsScenario :: Lq.Format -> Lq.Connection -> IO (Maybe ResultObservation)
 paramsScenario resultFormat =
   observed
     "select $1 :: int4 + $2 :: int4 as sum, $3 :: text as label"

@@ -5,23 +5,23 @@ module Pqi.Conformance.Operation.SendFlushRequest
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (takeCommandResults, takeResult)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "sendFlushRequest" do
     it "delivers results without a sync" \conninfo ->
-      differential proxy conninfo \connection -> do
-        entered <- enterPipelineMode connection
-        sent <- sendQueryParams connection "select 42" [] Lq.Text
-        flushRequested <- sendFlushRequest connection
+      differential adapter conninfo \connection -> do
+        entered <- connection.enterPipelineMode
+        sent <- connection.sendQueryParams "select 42" [] Lq.Text
+        flushRequested <- connection.sendFlushRequest
         results <- takeCommandResults connection
-        synced <- pipelineSync connection
+        synced <- connection.pipelineSync
         syncResult <- takeResult connection
-        exited <- exitPipelineMode connection
+        exited <- connection.exitPipelineMode
         pure (entered, sent, flushRequested, results, synced, syncResult, exited)

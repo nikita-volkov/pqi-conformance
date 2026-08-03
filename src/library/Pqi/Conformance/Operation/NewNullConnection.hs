@@ -5,18 +5,18 @@ module Pqi.Conformance.Operation.NewNullConnection
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "newNullConnection" do
     it "produces a connection that is null and bad" \conninfo ->
-      differentialConnect proxy conninfo \(_ :: Proxy c) _ -> do
-        connection <- newNullConnection :: IO c
-        nullness <- pure (isNullConnection connection)
-        badness <- status connection
-        finish connection
+      differentialConnect adapter conninfo \adapter' _ -> do
+        connection <- adapter'.newNullConnection
+        nullness <- pure connection.isNullConnection
+        badness <- connection.status
+        connection.finish
         pure (nullness, badness)

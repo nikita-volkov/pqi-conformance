@@ -5,24 +5,24 @@ module Pqi.Conformance.Operation.Prepare
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "prepare" do
     it "reports its own result" \conninfo ->
-      differential proxy conninfo \connection ->
-        prepare connection "conformance_prep_result" "select $1 :: int4" Nothing
+      differential adapter conninfo \connection ->
+        connection.prepare "conformance_prep_result" "select $1 :: int4" Nothing
           >>= traverse observeResult
 
     it "rejects a duplicate statement name" \conninfo ->
-      differential proxy conninfo \connection -> do
+      differential adapter conninfo \connection -> do
         first <-
-          prepare connection "conformance_dup" "select 1" Nothing >>= traverse observeResult
+          connection.prepare "conformance_dup" "select 1" Nothing >>= traverse observeResult
         second <-
-          prepare connection "conformance_dup" "select 2" Nothing >>= traverse observeResult
+          connection.prepare "conformance_dup" "select 2" Nothing >>= traverse observeResult
         pure (first, second)

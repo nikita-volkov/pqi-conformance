@@ -5,13 +5,13 @@ module Pqi.Conformance.Operation.ConnectionUsedPassword
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "connectionUsedPassword" do
     it "reports whether a password was used" \conninfo ->
-      differential proxy conninfo connectionUsedPassword
+      differential adapter conninfo (.connectionUsedPassword)

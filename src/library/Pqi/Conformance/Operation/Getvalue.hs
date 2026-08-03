@@ -5,20 +5,20 @@ module Pqi.Conformance.Operation.Getvalue
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "getvalue" do
     it "reads cells, nulls, and degrades out of range" \conninfo ->
-      differential proxy conninfo \connection -> do
-        result <- exec connection "select 'hello' :: text, null :: int4"
+      differential adapter conninfo \connection -> do
+        result <- connection.exec "select 'hello' :: text, null :: int4"
         for result \r -> do
-          present <- getvalue r 0 0
-          nullCell <- getvalue r 0 1
-          badRow <- getvalue r 1 0
-          badColumn <- getvalue r 0 5
+          present <- r.getvalue 0 0
+          nullCell <- r.getvalue 0 1
+          badRow <- r.getvalue 1 0
+          badColumn <- r.getvalue 0 5
           pure (present, nullCell, badRow, badColumn)

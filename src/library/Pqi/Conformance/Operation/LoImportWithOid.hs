@@ -10,24 +10,24 @@ module Pqi.Conformance.Operation.LoImportWithOid
 where
 
 import qualified Data.ByteString as ByteString
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import System.Directory (removeFile)
 import System.IO (hClose, openBinaryTempFile)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "loImportWithOid" do
     it "imports a file as a large object with an explicit OID" \conninfo ->
-      differential proxy conninfo \connection -> do
+      differential adapter conninfo \connection -> do
         (path, handle) <- openBinaryTempFile "/tmp" "pqi-conformance-import-oid"
         ByteString.hPut handle "pqi conformance payload"
         hClose handle
-        _ <- loUnlink connection explicitOid
-        imported <- loImportWithOid connection path explicitOid
-        unlinked <- for imported (loUnlink connection)
+        _ <- connection.loUnlink explicitOid
+        imported <- connection.loImportWithOid path explicitOid
+        unlinked <- for imported connection.loUnlink
         removeFile path
         pure (imported, unlinked)
   where

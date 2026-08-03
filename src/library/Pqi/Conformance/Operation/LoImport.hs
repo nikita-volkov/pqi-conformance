@@ -9,22 +9,22 @@ module Pqi.Conformance.Operation.LoImport
 where
 
 import qualified Data.ByteString as ByteString
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import System.Directory (removeFile)
 import System.IO (hClose, openBinaryTempFile)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "loImport" do
     it "imports a file as a large object" \conninfo ->
-      differential proxy conninfo \connection -> do
+      differential adapter conninfo \connection -> do
         (path, handle) <- openBinaryTempFile "/tmp" "pqi-conformance-import"
         ByteString.hPut handle "pqi conformance payload"
         hClose handle
-        imported <- loImport connection path
-        traverse_ (loUnlink connection) imported
+        imported <- connection.loImport path
+        traverse_ connection.loUnlink imported
         removeFile path
         pure (isJust imported)

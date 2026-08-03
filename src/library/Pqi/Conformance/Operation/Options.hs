@@ -5,13 +5,13 @@ module Pqi.Conformance.Operation.Options
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "options" do
     it "reports the command-line options from the conninfo" \conninfo ->
-      differential proxy conninfo options
+      differential adapter conninfo (.options)

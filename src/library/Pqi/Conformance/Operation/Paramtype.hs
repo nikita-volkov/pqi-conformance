@@ -5,27 +5,27 @@ module Pqi.Conformance.Operation.Paramtype
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (int8Oid)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "paramtype" do
     it "reports inferred parameter types" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- prepare connection "conformance_paramtype" "select $1 :: int4, $2 :: text" Nothing
-        described <- describePrepared connection "conformance_paramtype"
+      differential adapter conninfo \connection -> do
+        _ <- connection.prepare "conformance_paramtype" "select $1 :: int4, $2 :: text" Nothing
+        described <- connection.describePrepared "conformance_paramtype"
         for described \r -> do
-          n <- nparams r
-          traverse (paramtype r) [0 .. n - 1]
+          n <- r.nparams
+          traverse r.paramtype [0 .. n - 1]
 
     it "reports explicitly requested parameter types" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- prepare connection "conformance_paramtype_typed" "select $1" (Just [int8Oid])
-        described <- describePrepared connection "conformance_paramtype_typed"
+      differential adapter conninfo \connection -> do
+        _ <- connection.prepare "conformance_paramtype_typed" "select $1" (Just [int8Oid])
+        described <- connection.describePrepared "conformance_paramtype_typed"
         for described \r -> do
-          n <- nparams r
-          traverse (paramtype r) [0 .. n - 1]
+          n <- r.nparams
+          traverse r.paramtype [0 .. n - 1]

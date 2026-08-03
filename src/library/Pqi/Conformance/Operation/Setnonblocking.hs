@@ -5,18 +5,18 @@ module Pqi.Conformance.Operation.Setnonblocking
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "setnonblocking" do
     it "turns the non-blocking flag on and off" \conninfo ->
-      differential proxy conninfo \connection -> do
-        setOn <- setnonblocking connection True
-        nowOn <- isnonblocking connection
-        setOff <- setnonblocking connection False
-        nowOff <- isnonblocking connection
+      differential adapter conninfo \connection -> do
+        setOn <- connection.setnonblocking True
+        nowOn <- connection.isnonblocking
+        setOff <- connection.setnonblocking False
+        nowOff <- connection.isnonblocking
         pure (setOn, nowOn, setOff, nowOff)

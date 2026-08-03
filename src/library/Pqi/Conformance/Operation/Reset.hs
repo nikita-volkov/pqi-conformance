@@ -5,22 +5,22 @@ module Pqi.Conformance.Operation.Reset
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "reset" do
     it "restores a fresh session" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- prepare connection "conformance_reset" "select 1" Nothing
-        _ <- exec connection "begin"
-        inTransaction <- transactionStatus connection
-        reset connection
+      differential adapter conninfo \connection -> do
+        _ <- connection.prepare "conformance_reset" "select 1" Nothing
+        _ <- connection.exec "begin"
+        inTransaction <- connection.transactionStatus
+        connection.reset
         afterReset <- observeConnection connection
         -- The prepared statement must be gone in the fresh session.
-        describeAfter <- describePrepared connection "conformance_reset" >>= traverse observeResult
+        describeAfter <- connection.describePrepared "conformance_reset" >>= traverse observeResult
         pure (inTransaction, afterReset, describeAfter)

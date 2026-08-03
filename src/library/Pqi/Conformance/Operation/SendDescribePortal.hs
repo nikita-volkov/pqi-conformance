@@ -5,19 +5,19 @@ module Pqi.Conformance.Operation.SendDescribePortal
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (drainResults)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "sendDescribePortal" do
     it "describes a declared cursor asynchronously" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- exec connection "begin"
-        _ <- exec connection "declare conformance_async_cursor cursor for select 1 :: int4 as n"
-        sent <- sendDescribePortal connection "conformance_async_cursor"
+      differential adapter conninfo \connection -> do
+        _ <- connection.exec "begin"
+        _ <- connection.exec "declare conformance_async_cursor cursor for select 1 :: int4 as n"
+        sent <- connection.sendDescribePortal "conformance_async_cursor"
         results <- drainResults connection
         pure (sent, results)

@@ -7,14 +7,14 @@ module Pqi.Conformance.Operation.BackendPID
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "backendPID" do
     it "is positive on an open connection" \conninfo ->
-      differential proxy conninfo \connection ->
-        (> 0) <$> backendPID connection
+      differential adapter conninfo \connection ->
+        (> 0) <$> connection.backendPID

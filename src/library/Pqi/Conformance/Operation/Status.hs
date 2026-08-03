@@ -4,13 +4,13 @@ module Pqi.Conformance.Operation.Status
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "status" do
     it "reports a ready connection as OK" \conninfo ->
-      differential proxy conninfo status
+      differential adapter conninfo (.status)

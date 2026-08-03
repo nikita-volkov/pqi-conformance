@@ -5,20 +5,20 @@ module Pqi.Conformance.Operation.ResetStart
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (pollUntilDone)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "resetStart" do
     it "begins an asynchronous reset that polls to a fresh session" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- exec connection "begin"
-        started <- resetStart connection
-        polled <- pollUntilDone (resetPoll connection)
+      differential adapter conninfo \connection -> do
+        _ <- connection.exec "begin"
+        started <- connection.resetStart
+        polled <- pollUntilDone connection.resetPoll
         afterReset <- observeConnection connection
         pure (started, polled, afterReset)

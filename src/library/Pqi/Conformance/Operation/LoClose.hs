@@ -5,24 +5,24 @@ module Pqi.Conformance.Operation.LoClose
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (inTransaction)
 import System.IO (IOMode (..))
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "loClose" do
     it "closes the descriptor and invalidates further reads" \conninfo ->
-      differential proxy conninfo \connection ->
+      differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- loCreat connection
+          oid <- connection.loCreat
           outcome <- for oid \o -> do
-            fd <- loOpen connection o ReadMode
-            closed <- for fd \f -> loClose connection f
-            readAfterClose <- join <$> for fd \f -> loRead connection f 10
+            fd <- connection.loOpen o ReadMode
+            closed <- for fd (connection.loClose)
+            readAfterClose <- join <$> for fd \f -> connection.loRead f 10
             pure (closed, readAfterClose)
-          traverse_ (loUnlink connection) oid
+          traverse_ connection.loUnlink oid
           pure outcome

@@ -4,13 +4,13 @@ module Pqi.Conformance.Operation.Port
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "port" do
     it "reports the port from the conninfo" \conninfo ->
-      differential proxy conninfo port
+      differential adapter conninfo (.port)

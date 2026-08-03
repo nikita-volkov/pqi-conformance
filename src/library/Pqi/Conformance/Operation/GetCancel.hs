@@ -5,14 +5,14 @@ module Pqi.Conformance.Operation.GetCancel
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "getCancel" do
     it "produces a handle for an open connection" \conninfo ->
-      differential proxy conninfo \connection ->
-        isJust <$> getCancel connection
+      differential adapter conninfo \connection ->
+        isJust <$> connection.getCancel

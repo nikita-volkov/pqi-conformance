@@ -15,13 +15,13 @@ module Pqi.Conformance.Operation.Cancel.Cleanup
 where
 
 import Control.Exception (bracket)
-import Pqi (ExecStatus (..), IsCancel (..), IsConnection (..), IsResult (..))
+import qualified Pqi
 import qualified Pqi as Lq
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: forall c. (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "cancel cleanup" do
     -- Reproduces the state that hasql's cleanUpAfterInterruption reaches after
     -- a timeout fires mid-pipeline:
@@ -38,11 +38,11 @@ spec proxy =
     --   5. exec runs a follow-up command — it must NOT be cancelled by the
     --      stale signal that arrived in step 2.
     it "does not corrupt subsequent commands when cancel is called after pipeline results are drained" \conninfo ->
-      bracket (connectdb conninfo :: IO c) finish \connection -> do
+      bracket (adapter.connectdb conninfo) (.finish) \connection -> do
         -- Enter pipeline mode and dispatch a fast query.
-        _ <- enterPipelineMode connection
-        _ <- sendQueryParams connection "select 1" [] Lq.Text
-        _ <- pipelineSync connection
+        _ <- connection.enterPipelineMode
+        _ <- connection.sendQueryParams "select 1" [] Lq.Text
+        _ <- connection.pipelineSync
 
         -- Wait for the server to process the query so both messages
         -- (CommandComplete + ReadyForQuery) are already in the socket by the
@@ -53,7 +53,7 @@ spec proxy =
         -- After this loop exits, asyncPending=True in pqi-native because
         -- ReadyForQuery has not been read yet.
         let drainAll = do
-              mr <- getResult connection
+              mr <- connection.getResult
               case mr of
                 Nothing -> pure ()
                 Just _ -> drainAll
@@ -61,8 +61,8 @@ spec proxy =
 
         -- Send cancel.  Because asyncPending=True in pqi-native, a cancel
         -- request is dispatched to the server despite the query being done.
-        handle <- getCancel connection
-        for_ handle cancel
+        handle <- connection.getCancel
+        for_ handle (.cancel)
 
         -- Give the stale cancel enough time to reach the server and set
         -- QueryCancelPending before the next command arrives.
@@ -72,13 +72,13 @@ spec proxy =
         drainAll
 
         -- Exit pipeline mode (sends an implicit Sync in the reference impl).
-        _ <- exitPipelineMode connection
+        _ <- connection.exitPipelineMode
 
         -- A follow-up command must succeed; 57014 here means the stale cancel
         -- corrupted the connection.
-        mResult <- exec connection "select 1"
+        mResult <- connection.exec "select 1"
         case mResult of
           Nothing -> expectationFailure "exec returned no result after pipeline cleanup"
-          Just (result :: ResultOf c) -> do
-            status <- resultStatus result
-            status `shouldBe` TuplesOk
+          Just result -> do
+            status <- result.resultStatus
+            status `shouldBe` Lq.TuplesOk

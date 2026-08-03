@@ -5,18 +5,18 @@ module Pqi.Conformance.Operation.CmdStatus
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "cmdStatus" do
     it "reports the command tag for each command" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- exec connection "create temporary table conformance_cmd_status (id int4, label text)"
-        let tagOf sql = exec connection sql >>= traverse cmdStatus
+      differential adapter conninfo \connection -> do
+        _ <- connection.exec "create temporary table conformance_cmd_status (id int4, label text)"
+        let tagOf sql = connection.exec sql >>= traverse (.cmdStatus)
         insert <- tagOf "insert into conformance_cmd_status values (1, 'a'), (2, 'b')"
         update <- tagOf "update conformance_cmd_status set label = 'c' where id = 1"
         delete <- tagOf "delete from conformance_cmd_status where id = 2"

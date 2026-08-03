@@ -5,13 +5,13 @@ module Pqi.Conformance.Operation.ServerVersion
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "serverVersion" do
     it "reports the server version as an integer" \conninfo ->
-      differential proxy conninfo serverVersion
+      differential adapter conninfo (.serverVersion)

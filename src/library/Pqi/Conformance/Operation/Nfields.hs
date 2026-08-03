@@ -5,17 +5,17 @@ module Pqi.Conformance.Operation.Nfields
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "nfields" do
     it "counts columns across result shapes" \conninfo ->
-      differential proxy conninfo \connection -> do
-        let countOf sql = exec connection sql >>= traverse nfields
+      differential adapter conninfo \connection -> do
+        let countOf sql = connection.exec sql >>= traverse (.nfields)
         several <- countOf "select 1, 2, 3"
         zero <- countOf "select"
         command <- countOf "create temporary table conformance_nfields (id int4)"

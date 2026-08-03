@@ -9,26 +9,26 @@ module Pqi.Conformance.Operation.LoExport
 where
 
 import qualified Data.ByteString as ByteString
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import System.Directory (removeFile)
 import System.IO (hClose, openBinaryTempFile)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "loExport" do
     it "exports an imported object, round-tripping its bytes" \conninfo ->
-      differential proxy conninfo \connection -> do
+      differential adapter conninfo \connection -> do
         (importPath, importHandle) <- openBinaryTempFile "/tmp" "pqi-conformance-export-in"
         ByteString.hPut importHandle payload
         hClose importHandle
         (exportPath, exportHandle) <- openBinaryTempFile "/tmp" "pqi-conformance-export-out"
         hClose exportHandle
-        imported <- loImport connection importPath
-        exported <- for imported \o -> loExport connection o exportPath
-        traverse_ (loUnlink connection) imported
+        imported <- connection.loImport importPath
+        exported <- for imported \o -> connection.loExport o exportPath
+        traverse_ connection.loUnlink imported
         roundTripped <- ByteString.readFile exportPath
         removeFile importPath
         removeFile exportPath

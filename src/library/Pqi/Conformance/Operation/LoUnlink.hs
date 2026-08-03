@@ -5,19 +5,19 @@ module Pqi.Conformance.Operation.LoUnlink
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (inTransaction)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "loUnlink" do
     it "removes an existing object and rejects a missing one" \conninfo ->
-      differential proxy conninfo \connection ->
+      differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- loCreat connection
-          removed <- for oid (loUnlink connection)
-          missing <- loUnlink connection 4242424
+          oid <- connection.loCreat
+          removed <- for oid connection.loUnlink
+          missing <- connection.loUnlink 4242424
           pure (removed, missing)

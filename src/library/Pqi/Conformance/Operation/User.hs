@@ -4,13 +4,13 @@ module Pqi.Conformance.Operation.User
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "user" do
     it "reports the user name from the conninfo" \conninfo ->
-      differential proxy conninfo user
+      differential adapter conninfo (.user)

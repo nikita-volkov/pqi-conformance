@@ -5,18 +5,18 @@ module Pqi.Conformance.Operation.GetResult
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (takeResult)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "getResult" do
     it "yields each result then a Nothing terminator" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- sendQuery connection "select 1 :: int4"
+      differential adapter conninfo \connection -> do
+        _ <- connection.sendQuery "select 1 :: int4"
         first <- takeResult connection
         terminator <- takeResult connection
         afterTerminator <- takeResult connection

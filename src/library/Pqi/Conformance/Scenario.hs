@@ -35,55 +35,49 @@ module Pqi.Conformance.Scenario
   )
 where
 
-import Pqi
-  ( CopyOutResult (..),
-    FlushStatus (..),
-    IsConnection (..),
-    PollingStatus (..),
-  )
-import qualified Pqi as Lq
+import qualified Pqi
+import Pqi (CopyOutResult (..), FlushStatus (..), PollingStatus (..))
 import Pqi.Conformance.Observation
 import Pqi.Conformance.Prelude
 
 -- | Run 'Pqi.exec' and observe its result (if any).
-execScenario :: (IsConnection c) => ByteString -> c -> IO (Maybe ResultObservation)
-execScenario sql connection = exec connection sql >>= traverse observeResult
+execScenario :: ByteString -> Pqi.Connection -> IO (Maybe ResultObservation)
+execScenario sql connection = connection.exec sql >>= traverse observeResult
 
 -- | Run a sequence of statements with 'Pqi.exec', observing every result.
-execAllScenario :: (IsConnection c) => [ByteString] -> c -> IO [Maybe ResultObservation]
+execAllScenario :: [ByteString] -> Pqi.Connection -> IO [Maybe ResultObservation]
 execAllScenario sqls connection = traverse (`execScenario` connection) sqls
 
 -- | Run 'Pqi.execParams' and observe its result (if any).
 observed ::
-  (IsConnection c) =>
   ByteString ->
-  [Maybe (Word32, ByteString, Lq.Format)] ->
-  Lq.Format ->
-  c ->
+  [Maybe (Word32, ByteString, Pqi.Format)] ->
+  Pqi.Format ->
+  Pqi.Connection ->
   IO (Maybe ResultObservation)
 observed sql params resultFormat connection =
-  execParams connection sql params resultFormat >>= traverse observeResult
+  connection.execParams sql params resultFormat >>= traverse observeResult
 
 -- | Collect and observe results with 'Pqi.getResult' until it reports
 -- completion with 'Nothing'.
-drainResults :: (IsConnection c) => c -> IO [ResultObservation]
+drainResults :: Pqi.Connection -> IO [ResultObservation]
 drainResults connection = go []
   where
     go acc =
-      getResult connection >>= \case
+      connection.getResult >>= \case
         Nothing -> pure (reverse acc)
         Just result -> do
           observation <- observeResult result
           go (observation : acc)
 
 -- | One 'Pqi.getResult' step, observed.
-takeResult :: (IsConnection c) => c -> IO (Maybe ResultObservation)
-takeResult connection = getResult connection >>= traverse observeResult
+takeResult :: Pqi.Connection -> IO (Maybe ResultObservation)
+takeResult connection = connection.getResult >>= traverse observeResult
 
 -- | The results of one pipelined command: its result and the 'Nothing'
 -- separator that ends it.
 takeCommandResults ::
-  (IsConnection c) => c -> IO (Maybe ResultObservation, Maybe ResultObservation)
+  Pqi.Connection -> IO (Maybe ResultObservation, Maybe ResultObservation)
 takeCommandResults connection = do
   result <- takeResult connection
   separator <- takeResult connection
@@ -92,12 +86,12 @@ takeCommandResults connection = do
 -- | Collect blocking 'Pqi.getCopyData' outcomes until the stream reports
 -- anything other than a row (normally 'CopyOutDone'), including that final
 -- outcome.
-collectCopyOut :: (IsConnection c) => c -> IO [CopyOutResult]
+collectCopyOut :: Pqi.Connection -> IO [CopyOutResult]
 collectCopyOut connection = go (1000 :: Int) []
   where
     go 0 acc = pure (reverse acc)
     go n acc =
-      getCopyData connection False >>= \case
+      connection.getCopyData False >>= \case
         CopyOutRow row -> go (n - 1) (CopyOutRow row : acc)
         terminal -> pure (reverse (terminal : acc))
 
@@ -126,11 +120,11 @@ flushUntilDone doFlush = go (10000 :: Int)
 
 -- | Run an action between @begin@ and @commit@. Large-object operations must
 -- run inside a transaction block.
-inTransaction :: (IsConnection c) => c -> IO a -> IO a
+inTransaction :: Pqi.Connection -> IO a -> IO a
 inTransaction connection action = do
-  _ <- exec connection "begin"
+  _ <- connection.exec "begin"
   result <- action
-  _ <- exec connection "commit"
+  _ <- connection.exec "commit"
   pure result
 
 boolOid :: Word32

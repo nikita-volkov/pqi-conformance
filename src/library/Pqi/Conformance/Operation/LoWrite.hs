@@ -4,24 +4,24 @@ module Pqi.Conformance.Operation.LoWrite
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (inTransaction)
 import System.IO (IOMode (..))
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "loWrite" do
     it "reports the number of bytes written" \conninfo ->
-      differential proxy conninfo \connection ->
+      differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- loCreat connection
+          oid <- connection.loCreat
           outcome <- for oid \o -> do
-            fd <- loOpen connection o ReadWriteMode
-            written <- for fd \f -> loWrite connection f "hello, large object"
-            traverse_ (loClose connection) fd
+            fd <- connection.loOpen o ReadWriteMode
+            written <- for fd \f -> connection.loWrite f "hello, large object"
+            traverse_ connection.loClose fd
             pure written
-          traverse_ (loUnlink connection) oid
+          traverse_ connection.loUnlink oid
           pure outcome

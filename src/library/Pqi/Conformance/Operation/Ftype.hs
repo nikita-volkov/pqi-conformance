@@ -5,19 +5,19 @@ module Pqi.Conformance.Operation.Ftype
   )
 where
 
-import Pqi (IsConnection (..), IsResult (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "ftype" do
     it "reports type OIDs and degrades out of range" \conninfo ->
-      differential proxy conninfo \connection -> do
-        result <- exec connection "select 1 :: int4, 'x' :: text, true, 1.5 :: float8, 1 :: int2"
+      differential adapter conninfo \connection -> do
+        result <- connection.exec "select 1 :: int4, 'x' :: text, true, 1.5 :: float8, 1 :: int2"
         for result \r -> do
-          n <- nfields r
-          types <- traverse (ftype r) [0 .. n - 1]
-          outOfRange <- ftype r 9
+          n <- r.nfields
+          types <- traverse r.ftype [0 .. n - 1]
+          outOfRange <- r.ftype 9
           pure (types, outOfRange)

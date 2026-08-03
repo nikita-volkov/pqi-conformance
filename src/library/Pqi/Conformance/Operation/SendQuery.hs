@@ -6,18 +6,18 @@ module Pqi.Conformance.Operation.SendQuery
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (drainResults)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "sendQuery" do
     let sendAndDrain sql conninfo =
-          differential proxy conninfo \connection -> do
-            sent <- sendQuery connection sql
+          differential adapter conninfo \connection -> do
+            sent <- connection.sendQuery sql
             results <- drainResults connection
             pure (sent, results)
     it "sends a query and collects its result"

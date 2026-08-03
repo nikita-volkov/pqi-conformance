@@ -5,19 +5,19 @@ module Pqi.Conformance.Operation.SendDescribePrepared
   )
 where
 
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (drainResults)
 import Test.Hspec
 
-spec :: (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy =
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter =
   describe "sendDescribePrepared" do
     it "describes a prepared statement asynchronously" \conninfo ->
-      differential proxy conninfo \connection -> do
-        _ <- sendPrepare connection "conformance_send_desc" "select $1 :: int4 * 2" Nothing
+      differential adapter conninfo \connection -> do
+        _ <- connection.sendPrepare "conformance_send_desc" "select $1 :: int4 * 2" Nothing
         _ <- drainResults connection
-        sent <- sendDescribePrepared connection "conformance_send_desc"
+        sent <- connection.sendDescribePrepared "conformance_send_desc"
         results <- drainResults connection
         pure (sent, results)

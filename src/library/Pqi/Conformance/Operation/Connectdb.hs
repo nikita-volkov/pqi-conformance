@@ -11,49 +11,49 @@ import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Char8 as ByteString.Char8
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
-import Pqi (IsConnection (..))
+import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
 import Pqi.Conformance.Prelude
-import Pqi.Conformance.Reference (Reference)
+import qualified Pqi.Conformance.Reference as Reference
 import Test.Hspec
 import qualified TestcontainersPostgresql as TcPg
 
-spec :: forall c. (IsConnection c) => Proxy c -> SpecWith ByteString
-spec proxy = do
+spec :: Pqi.Adapter -> SpecWith ByteString
+spec adapter = do
   describe "connectdb" do
     it "opens a usable connection" \conninfo ->
-      differential proxy conninfo observeConnection
+      differential adapter conninfo observeConnection
 
     it "accepts a URI-format conninfo" \conninfo ->
-      differentialConnect proxy conninfo \(_ :: Proxy d) conninfo' -> do
-        connection <- connectdb (kvToUri conninfo') :: IO d
-        s <- status connection
-        finish connection
+      differentialConnect adapter conninfo \adapter' conninfo' -> do
+        connection <- adapter'.connectdb (kvToUri conninfo')
+        s <- connection.status
+        connection.finish
         pure s
 
     it "rejects an unknown database" \conninfo ->
-      differentialConnect proxy conninfo \(_ :: Proxy d) conninfo' -> do
-        connection <- connectdb (conninfo' <> " dbname=pqi_no_such_db") :: IO d
-        observation <- status connection
-        nullness <- pure (isNullConnection connection)
-        finish connection
+      differentialConnect adapter conninfo \adapter' conninfo' -> do
+        connection <- adapter'.connectdb (conninfo' <> " dbname=pqi_no_such_db")
+        observation <- connection.status
+        nullness <- pure connection.isNullConnection
+        connection.finish
         pure (observation, nullness)
 
     it "rejects an unknown user" \conninfo ->
-      differentialConnect proxy conninfo \(_ :: Proxy d) conninfo' -> do
-        connection <- connectdb (conninfo' <> " user=pqi_no_such_user") :: IO d
-        observation <- status connection
-        finish connection
+      differentialConnect adapter conninfo \adapter' conninfo' -> do
+        connection <- adapter'.connectdb (conninfo' <> " user=pqi_no_such_user")
+        observation <- connection.status
+        connection.finish
         pure observation
 
     it "defaults the user like the reference when user is omitted" \conninfo ->
-      differentialConnect proxy conninfo \(_ :: Proxy d) conninfo' -> do
-        connection <- connectdb (dropUser conninfo') :: IO d
-        resolvedUser <- user connection
-        observedStatus <- status connection
-        observedError <- errorMessage connection
-        finish connection
+      differentialConnect adapter conninfo \adapter' conninfo' -> do
+        connection <- adapter'.connectdb (dropUser conninfo')
+        resolvedUser <- connection.user
+        observedStatus <- connection.status
+        observedError <- connection.errorMessage
+        connection.finish
         pure (resolvedUser, observedStatus, observedError)
 
   describe "SCRAM-SHA-256 authentication" do
@@ -65,8 +65,8 @@ spec proxy = do
                 TcPg.auth = TcPg.CredentialsAuth "scram" "secret"
               }
 
-          scramScenario :: forall c. (IsConnection c) => c -> IO (Maybe ResultObservation)
-          scramScenario connection = exec connection "select 1 as scram_works" >>= traverse observeResult
+          scramScenario :: Pqi.Connection -> IO (Maybe ResultObservation)
+          scramScenario connection = connection.exec "select 1 as scram_works" >>= traverse observeResult
        in TcPg.run scramConfig \(host, port) -> do
             let conninfo =
                   ByteString.Char8.pack
@@ -76,9 +76,9 @@ spec proxy = do
                         <> show port
                         <> " user=scram password=secret dbname=scram"
                     )
-            native <- bracket (connectdb conninfo) finish (scramScenario @c)
-            reference <- bracket (connectdb conninfo) finish (scramScenario @Reference)
-            native `shouldBe` reference
+            candidate <- bracket (adapter.connectdb conninfo) (.finish) scramScenario
+            reference <- bracket (Reference.adapter.connectdb conninfo) (.finish) scramScenario
+            candidate `shouldBe` reference
 
 -- | Drop the @user=…@ token from a @key=value@ conninfo, leaving the user
 -- unspecified so the adapter must apply its own default. libpq derives the
