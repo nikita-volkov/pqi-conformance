@@ -14,4 +14,4 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
   describe "connectionUsedPassword" do
     it "reports whether a password was used" \conninfo ->
-      differential adapter conninfo (.connectionUsedPassword)
+      differential adapter conninfo Pqi.connectionUsedPassword

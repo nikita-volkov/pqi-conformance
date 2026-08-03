@@ -17,11 +17,11 @@ spec adapter =
     it "makes a raised notice retrievable" \conninfo ->
       differential adapter conninfo \connection -> do
         beforeEnable <- raiseNoticeAndCollect connection
-        connection.enableNoticeReporting
+        Pqi.enableNoticeReporting connection
         afterEnable <- raiseNoticeAndCollect connection
         pure (beforeEnable, afterEnable)
 
 raiseNoticeAndCollect :: Pqi.Connection -> IO Bool
 raiseNoticeAndCollect connection = do
-  _ <- connection.exec "do $$ begin raise notice 'conformance notice'; end $$"
-  isJust <$> connection.getNotice
+  _ <- Pqi.exec connection "do $$ begin raise notice 'conformance notice'; end $$"
+  isJust <$> Pqi.getNotice connection

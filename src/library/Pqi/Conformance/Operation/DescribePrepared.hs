@@ -18,14 +18,14 @@ spec adapter =
   describe "describePrepared" do
     it "reports parameter types" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.prepare "conformance_desc" "select $1 :: int4, $2 :: text" Nothing
-        connection.describePrepared "conformance_desc" >>= traverse observeResult
+        _ <- Pqi.prepare connection "conformance_desc" "select $1 :: int4, $2 :: text" Nothing
+        Pqi.describePrepared connection "conformance_desc" >>= traverse observeResult
 
     it "reports explicit parameter types" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.prepare "conformance_typed" "select $1" (Just [int8Oid])
-        connection.describePrepared "conformance_typed" >>= traverse observeResult
+        _ <- Pqi.prepare connection "conformance_typed" "select $1" (Just [int8Oid])
+        Pqi.describePrepared connection "conformance_typed" >>= traverse observeResult
 
     it "rejects an unknown statement" \conninfo ->
       differential adapter conninfo \connection ->
-        connection.describePrepared "conformance_missing" >>= traverse observeResult
+        Pqi.describePrepared connection "conformance_missing" >>= traverse observeResult

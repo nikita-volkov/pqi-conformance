@@ -15,9 +15,9 @@ spec adapter =
   describe "getvalue'" do
     it "copies cells that survive freeing the result" \conninfo ->
       differential adapter conninfo \connection -> do
-        result <- connection.exec "select 'copied' :: text, null :: int4"
+        result <- Pqi.exec connection "select 'copied' :: text, null :: int4"
         for result \r -> do
-          first <- r.getvalue' 0 0
-          second <- r.getvalue' 0 1
-          r.unsafeFreeResult
+          first <- Pqi.getvalue' r 0 0
+          second <- Pqi.getvalue' r 0 1
+          Pqi.unsafeFreeResult r
           pure (first, second)

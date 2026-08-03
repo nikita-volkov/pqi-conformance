@@ -17,8 +17,8 @@ spec adapter =
   describe "resetStart" do
     it "begins an asynchronous reset that polls to a fresh session" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "begin"
-        started <- connection.resetStart
-        polled <- pollUntilDone connection.resetPoll
+        _ <- Pqi.exec connection "begin"
+        started <- Pqi.resetStart connection
+        polled <- pollUntilDone (Pqi.resetPoll connection)
         afterReset <- observeConnection connection
         pure (started, polled, afterReset)

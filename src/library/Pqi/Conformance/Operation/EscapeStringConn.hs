@@ -16,15 +16,15 @@ spec adapter =
   describe "escapeStringConn" do
     it "escapes a range of strings" \conninfo ->
       differential adapter conninfo \connection ->
-        traverse connection.escapeStringConn stringCases
+        traverse (Pqi.escapeStringConn connection) stringCases
 
     it "rejects invalid encoding" \conninfo ->
       differential adapter conninfo \connection ->
-        connection.escapeStringConn "\255\254"
+        Pqi.escapeStringConn connection "\255\254"
 
     it "produces literals that round-trip through a query" \conninfo ->
       differential adapter conninfo \connection -> do
-        escaped <- connection.escapeStringConn "it's \\ tricky\nstuff"
+        escaped <- Pqi.escapeStringConn connection "it's \\ tricky\nstuff"
         for escaped \literal ->
           execScenario ("select '" <> literal <> "' :: text") connection
   where

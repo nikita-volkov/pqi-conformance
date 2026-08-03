@@ -26,37 +26,37 @@ spec adapter =
   describe "errorMessage" do
     it "is empty on a healthy connection" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "select 1"
-        connection.errorMessage
+        _ <- Pqi.exec connection "select 1"
+        Pqi.errorMessage connection
 
     it "is populated after a failed exec and cleared by a subsequent success" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "do $$ begin raise exception 'conformance error'; end $$"
-        afterFail <- connection.errorMessage
-        _ <- connection.exec "select 1"
-        afterSuccess <- connection.errorMessage
+        _ <- Pqi.exec connection "do $$ begin raise exception 'conformance error'; end $$"
+        afterFail <- Pqi.errorMessage connection
+        _ <- Pqi.exec connection "select 1"
+        afterSuccess <- Pqi.errorMessage connection
         pure (afterFail, afterSuccess)
 
     it "is populated after a failed getResult and cleared by a subsequent success" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.sendQuery "do $$ begin raise exception 'conformance error'; end $$"
+        _ <- Pqi.sendQuery connection "do $$ begin raise exception 'conformance error'; end $$"
         _ <- drainResults connection
-        afterFail <- connection.errorMessage
-        _ <- connection.sendQuery "select 1"
+        afterFail <- Pqi.errorMessage connection
+        _ <- Pqi.sendQuery connection "select 1"
         _ <- drainResults connection
-        afterSuccess <- connection.errorMessage
+        afterSuccess <- Pqi.errorMessage connection
         pure (afterFail, afterSuccess)
 
     it "is populated after a connection failure" \conninfo ->
       differentialConnect adapter conninfo \adapter' conninfo' -> do
-        conn <- adapter'.connectdb (conninfo' <> " user=pqi_no_such_user")
-        msg <- conn.errorMessage
-        conn.finish
+        conn <- Pqi.connectdb adapter' (conninfo' <> " user=pqi_no_such_user")
+        msg <- Pqi.errorMessage conn
+        Pqi.finish conn
         pure msg
 
     it "is the null-connection sentinel on a null connection" \conninfo ->
       differentialConnect adapter conninfo \adapter' _ -> do
-        conn <- adapter'.newNullConnection
-        msg <- conn.errorMessage
-        conn.finish
+        conn <- Pqi.newNullConnection adapter'
+        msg <- Pqi.errorMessage conn
+        Pqi.finish conn
         pure msg

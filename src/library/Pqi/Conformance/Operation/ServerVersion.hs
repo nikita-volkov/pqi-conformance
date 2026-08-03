@@ -14,4 +14,4 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
   describe "serverVersion" do
     it "reports the server version as an integer" \conninfo ->
-      differential adapter conninfo (.serverVersion)
+      differential adapter conninfo Pqi.serverVersion

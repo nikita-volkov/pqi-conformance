@@ -16,11 +16,11 @@ spec adapter =
   describe "escapeIdentifier" do
     it "escapes a range of identifiers" \conninfo ->
       differential adapter conninfo \connection ->
-        traverse connection.escapeIdentifier identifierCases
+        traverse (Pqi.escapeIdentifier connection) identifierCases
 
     it "produces identifiers that round-trip through a query" \conninfo ->
       differential adapter conninfo \connection -> do
-        escaped <- connection.escapeIdentifier "Wéird \"column\" name"
+        escaped <- Pqi.escapeIdentifier connection "Wéird \"column\" name"
         for escaped \identifier ->
           execScenario ("select 1 as " <> identifier) connection
   where

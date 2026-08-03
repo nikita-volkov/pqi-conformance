@@ -21,6 +21,6 @@ spec adapter =
   describe "unsafeFreeResult" do
     it "leaves the connection usable" \conninfo ->
       differential adapter conninfo \connection -> do
-        result <- connection.exec "select 1"
-        traverse_ (.unsafeFreeResult) result
+        result <- Pqi.exec connection "select 1"
+        traverse_ Pqi.unsafeFreeResult result
         execScenario "select 2" connection

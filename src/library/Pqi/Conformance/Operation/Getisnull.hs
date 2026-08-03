@@ -15,9 +15,9 @@ spec adapter =
   describe "getisnull" do
     it "distinguishes null, empty, and non-empty cells" \conninfo ->
       differential adapter conninfo \connection -> do
-        result <- connection.exec "select 'x' :: text, '' :: text, null :: int4"
+        result <- Pqi.exec connection "select 'x' :: text, '' :: text, null :: int4"
         for result \r -> do
-          nonEmpty <- r.getisnull 0 0
-          empty <- r.getisnull 0 1
-          nullCell <- r.getisnull 0 2
+          nonEmpty <- Pqi.getisnull r 0 0
+          empty <- Pqi.getisnull r 0 1
+          nullCell <- Pqi.getisnull r 0 2
           pure (nonEmpty, empty, nullCell)

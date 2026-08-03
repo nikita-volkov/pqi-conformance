@@ -17,7 +17,7 @@ spec adapter =
   describe "sendQuery" do
     let sendAndDrain sql conninfo =
           differential adapter conninfo \connection -> do
-            sent <- connection.sendQuery sql
+            sent <- Pqi.sendQuery connection sql
             results <- drainResults connection
             pure (sent, results)
     it "sends a query and collects its result"

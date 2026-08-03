@@ -1,3 +1,9 @@
+# Upcoming
+
+## Fixes
+
+- Removed remaining `OverloadedRecordDot` usages from the source, since that extension (along with `DuplicateRecordFields` and `NoFieldSelectors`) was dropped from the default extensions to support GHC 8.10
+
 # v0.1.0.0
 
 ## Breaking

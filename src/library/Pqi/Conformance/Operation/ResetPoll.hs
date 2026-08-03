@@ -16,8 +16,8 @@ spec adapter =
   describe "resetPoll" do
     it "reaches a terminal polling status and a ready connection" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "begin"
-        started <- connection.resetStart
-        terminal <- pollUntilDone connection.resetPoll
-        afterStatus <- connection.transactionStatus
+        _ <- Pqi.exec connection "begin"
+        started <- Pqi.resetStart connection
+        terminal <- pollUntilDone (Pqi.resetPoll connection)
+        afterStatus <- Pqi.transactionStatus connection
         pure (started, terminal, afterStatus)

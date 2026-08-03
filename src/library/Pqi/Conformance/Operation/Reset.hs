@@ -16,11 +16,11 @@ spec adapter =
   describe "reset" do
     it "restores a fresh session" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.prepare "conformance_reset" "select 1" Nothing
-        _ <- connection.exec "begin"
-        inTransaction <- connection.transactionStatus
-        connection.reset
+        _ <- Pqi.prepare connection "conformance_reset" "select 1" Nothing
+        _ <- Pqi.exec connection "begin"
+        inTransaction <- Pqi.transactionStatus connection
+        Pqi.reset connection
         afterReset <- observeConnection connection
         -- The prepared statement must be gone in the fresh session.
-        describeAfter <- connection.describePrepared "conformance_reset" >>= traverse observeResult
+        describeAfter <- Pqi.describePrepared connection "conformance_reset" >>= traverse observeResult
         pure (inTransaction, afterReset, describeAfter)

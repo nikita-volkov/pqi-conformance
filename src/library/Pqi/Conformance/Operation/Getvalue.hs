@@ -15,10 +15,10 @@ spec adapter =
   describe "getvalue" do
     it "reads cells, nulls, and degrades out of range" \conninfo ->
       differential adapter conninfo \connection -> do
-        result <- connection.exec "select 'hello' :: text, null :: int4"
+        result <- Pqi.exec connection "select 'hello' :: text, null :: int4"
         for result \r -> do
-          present <- r.getvalue 0 0
-          nullCell <- r.getvalue 0 1
-          badRow <- r.getvalue 1 0
-          badColumn <- r.getvalue 0 5
+          present <- Pqi.getvalue r 0 0
+          nullCell <- Pqi.getvalue r 0 1
+          badRow <- Pqi.getvalue r 1 0
+          badColumn <- Pqi.getvalue r 0 5
           pure (present, nullCell, badRow, badColumn)

@@ -20,8 +20,8 @@ spec adapter =
   describe "getNotice" do
     it "yields the formatted notice while enabled and then drains" \conninfo ->
       differential adapter conninfo \connection -> do
-        connection.enableNoticeReporting
-        _ <- connection.exec "do $$ begin raise notice 'conformance notice'; end $$"
-        firstNotice <- connection.getNotice
-        afterDrain <- connection.getNotice
+        Pqi.enableNoticeReporting connection
+        _ <- Pqi.exec connection "do $$ begin raise notice 'conformance notice'; end $$"
+        firstNotice <- Pqi.getNotice connection
+        afterDrain <- Pqi.getNotice connection
         pure (firstNotice, afterDrain)

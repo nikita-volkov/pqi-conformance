@@ -15,8 +15,8 @@ spec adapter =
   describe "setnonblocking" do
     it "turns the non-blocking flag on and off" \conninfo ->
       differential adapter conninfo \connection -> do
-        setOn <- connection.setnonblocking True
-        nowOn <- connection.isnonblocking
-        setOff <- connection.setnonblocking False
-        nowOff <- connection.isnonblocking
+        setOn <- Pqi.setnonblocking connection True
+        nowOn <- Pqi.isnonblocking connection
+        setOff <- Pqi.setnonblocking connection False
+        nowOff <- Pqi.isnonblocking connection
         pure (setOn, nowOn, setOff, nowOff)

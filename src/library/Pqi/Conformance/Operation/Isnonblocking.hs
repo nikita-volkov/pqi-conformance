@@ -15,7 +15,7 @@ spec adapter =
   describe "isnonblocking" do
     it "is off initially and reflects a change" \conninfo ->
       differential adapter conninfo \connection -> do
-        initially <- connection.isnonblocking
-        _ <- connection.setnonblocking True
-        afterEnable <- connection.isnonblocking
+        initially <- Pqi.isnonblocking connection
+        _ <- Pqi.setnonblocking connection True
+        afterEnable <- Pqi.isnonblocking connection
         pure (initially, afterEnable)

@@ -18,7 +18,7 @@ spec adapter =
   describe "ftable" do
     it "reports the source-table OID, or none for a computed column" \conninfo ->
       differential adapter conninfo \connection -> do
-        result <- connection.exec "select relname, relkind, 1 as computed from pg_catalog.pg_class where false"
+        result <- Pqi.exec connection "select relname, relkind, 1 as computed from pg_catalog.pg_class where false"
         for result \r -> do
-          n <- r.nfields
-          traverse r.ftable [0 .. n - 1]
+          n <- Pqi.nfields r
+          traverse (Pqi.ftable r) [0 .. n - 1]

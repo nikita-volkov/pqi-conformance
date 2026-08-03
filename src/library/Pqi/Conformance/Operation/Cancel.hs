@@ -22,15 +22,15 @@ spec adapter =
   describe "cancel" do
     it "succeeds on an idle connection" \conninfo ->
       differential adapter conninfo \connection -> do
-        handle <- connection.getCancel
-        for handle (.cancel)
+        handle <- Pqi.getCancel connection
+        for handle Pqi.cancel
 
     it "fails a running query with 57014" \conninfo ->
       differential adapter conninfo \connection -> do
-        sent <- connection.sendQuery "select pg_sleep(10)"
+        sent <- Pqi.sendQuery connection "select pg_sleep(10)"
         threadDelay 100000
-        handle <- connection.getCancel
-        cancelled <- for handle (.cancel)
+        handle <- Pqi.getCancel connection
+        cancelled <- for handle Pqi.cancel
         results <- drainResults connection
         usable <- execScenario "select 1" connection
         pure (sent, cancelled, results, usable)
@@ -38,10 +38,10 @@ spec adapter =
     it "leaves the connection usable after cancelling a short-running query" \conninfo ->
       differential adapter conninfo \connection -> do
         outcomes <- replicateM 3 do
-          sent <- connection.sendQuery "select pg_sleep(0.1)"
+          sent <- Pqi.sendQuery connection "select pg_sleep(0.1)"
           threadDelay 50000
-          handle <- connection.getCancel
-          cancelled <- for handle (.cancel)
+          handle <- Pqi.getCancel connection
+          cancelled <- for handle Pqi.cancel
           results <- drainResults connection
           usable <- execScenario "select 1" connection
           pure (sent, cancelled, results, usable)

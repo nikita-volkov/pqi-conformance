@@ -38,11 +38,11 @@ spec adapter =
     --   5. exec runs a follow-up command — it must NOT be cancelled by the
     --      stale signal that arrived in step 2.
     it "does not corrupt subsequent commands when cancel is called after pipeline results are drained" \conninfo ->
-      bracket (adapter.connectdb conninfo) (.finish) \connection -> do
+      bracket (Lq.connectdb adapter conninfo) Lq.finish \connection -> do
         -- Enter pipeline mode and dispatch a fast query.
-        _ <- connection.enterPipelineMode
-        _ <- connection.sendQueryParams "select 1" [] Lq.Text
-        _ <- connection.pipelineSync
+        _ <- Lq.enterPipelineMode connection
+        _ <- Lq.sendQueryParams connection "select 1" [] Lq.Text
+        _ <- Lq.pipelineSync connection
 
         -- Wait for the server to process the query so both messages
         -- (CommandComplete + ReadyForQuery) are already in the socket by the
@@ -53,7 +53,7 @@ spec adapter =
         -- After this loop exits, asyncPending=True in pqi-native because
         -- ReadyForQuery has not been read yet.
         let drainAll = do
-              mr <- connection.getResult
+              mr <- Lq.getResult connection
               case mr of
                 Nothing -> pure ()
                 Just _ -> drainAll
@@ -61,8 +61,8 @@ spec adapter =
 
         -- Send cancel.  Because asyncPending=True in pqi-native, a cancel
         -- request is dispatched to the server despite the query being done.
-        handle <- connection.getCancel
-        for_ handle (.cancel)
+        handle <- Lq.getCancel connection
+        for_ handle Lq.cancel
 
         -- Give the stale cancel enough time to reach the server and set
         -- QueryCancelPending before the next command arrives.
@@ -72,13 +72,13 @@ spec adapter =
         drainAll
 
         -- Exit pipeline mode (sends an implicit Sync in the reference impl).
-        _ <- connection.exitPipelineMode
+        _ <- Lq.exitPipelineMode connection
 
         -- A follow-up command must succeed; 57014 here means the stale cancel
         -- corrupted the connection.
-        mResult <- connection.exec "select 1"
+        mResult <- Lq.exec connection "select 1"
         case mResult of
           Nothing -> expectationFailure "exec returned no result after pipeline cleanup"
           Just result -> do
-            status <- result.resultStatus
+            status <- Lq.resultStatus result
             status `shouldBe` Lq.TuplesOk

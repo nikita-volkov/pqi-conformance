@@ -16,13 +16,13 @@ spec adapter =
   describe "prepare" do
     it "reports its own result" \conninfo ->
       differential adapter conninfo \connection ->
-        connection.prepare "conformance_prep_result" "select $1 :: int4" Nothing
+        Pqi.prepare connection "conformance_prep_result" "select $1 :: int4" Nothing
           >>= traverse observeResult
 
     it "rejects a duplicate statement name" \conninfo ->
       differential adapter conninfo \connection -> do
         first <-
-          connection.prepare "conformance_dup" "select 1" Nothing >>= traverse observeResult
+          Pqi.prepare connection "conformance_dup" "select 1" Nothing >>= traverse observeResult
         second <-
-          connection.prepare "conformance_dup" "select 2" Nothing >>= traverse observeResult
+          Pqi.prepare connection "conformance_dup" "select 2" Nothing >>= traverse observeResult
         pure (first, second)

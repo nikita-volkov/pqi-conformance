@@ -18,16 +18,16 @@ spec adapter =
     it "seeks absolutely, relatively, and from the end" \conninfo ->
       differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- connection.loCreat
+          oid <- Pqi.loCreat connection
           outcome <- for oid \o -> do
-            fd <- connection.loOpen o ReadWriteMode
+            fd <- Pqi.loOpen connection o ReadWriteMode
             seeks <- for fd \f -> do
-              _ <- connection.loWrite f "hello, large object"
-              absolute <- connection.loSeek f AbsoluteSeek 0
-              relative <- connection.loSeek f RelativeSeek 2
-              fromEnd <- connection.loSeek f SeekFromEnd (-6)
+              _ <- Pqi.loWrite connection f "hello, large object"
+              absolute <- Pqi.loSeek connection f AbsoluteSeek 0
+              relative <- Pqi.loSeek connection f RelativeSeek 2
+              fromEnd <- Pqi.loSeek connection f SeekFromEnd (-6)
               pure (absolute, relative, fromEnd)
-            traverse_ connection.loClose fd
+            traverse_ (Pqi.loClose connection) fd
             pure seeks
-          traverse_ connection.loUnlink oid
+          traverse_ (Pqi.loUnlink connection) oid
           pure outcome

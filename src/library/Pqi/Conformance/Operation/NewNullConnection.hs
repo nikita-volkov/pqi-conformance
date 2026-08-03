@@ -15,8 +15,8 @@ spec adapter =
   describe "newNullConnection" do
     it "produces a connection that is null and bad" \conninfo ->
       differentialConnect adapter conninfo \adapter' _ -> do
-        connection <- adapter'.newNullConnection
-        nullness <- pure connection.isNullConnection
-        badness <- connection.status
-        connection.finish
+        connection <- Pqi.newNullConnection adapter'
+        nullness <- pure (Pqi.isNullConnection connection)
+        badness <- Pqi.status connection
+        Pqi.finish connection
         pure (nullness, badness)

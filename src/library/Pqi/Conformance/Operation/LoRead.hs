@@ -18,14 +18,14 @@ spec adapter =
     it "reads back what was written" \conninfo ->
       differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- connection.loCreat
+          oid <- Pqi.loCreat connection
           outcome <- for oid \o -> do
-            fd <- connection.loOpen o ReadWriteMode
+            fd <- Pqi.loOpen connection o ReadWriteMode
             readBytes <- for fd \f -> do
-              _ <- connection.loWrite f "hello, large object"
-              _ <- connection.loSeek f AbsoluteSeek 0
-              connection.loRead f 5
-            traverse_ connection.loClose fd
+              _ <- Pqi.loWrite connection f "hello, large object"
+              _ <- Pqi.loSeek connection f AbsoluteSeek 0
+              Pqi.loRead connection f 5
+            traverse_ (Pqi.loClose connection) fd
             pure readBytes
-          traverse_ connection.loUnlink oid
+          traverse_ (Pqi.loUnlink connection) oid
           pure outcome

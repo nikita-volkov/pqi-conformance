@@ -26,9 +26,9 @@ spec adapter =
         hClose importHandle
         (exportPath, exportHandle) <- openBinaryTempFile "/tmp" "pqi-conformance-export-out"
         hClose exportHandle
-        imported <- connection.loImport importPath
-        exported <- for imported \o -> connection.loExport o exportPath
-        traverse_ connection.loUnlink imported
+        imported <- Pqi.loImport connection importPath
+        exported <- for imported \o -> Pqi.loExport connection o exportPath
+        traverse_ (Pqi.loUnlink connection) imported
         roundTripped <- ByteString.readFile exportPath
         removeFile importPath
         removeFile exportPath

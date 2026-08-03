@@ -18,16 +18,16 @@ spec adapter =
   describe "pipelineStatus" do
     it "reports off, on, aborted, and recovery" \conninfo ->
       differential adapter conninfo \connection -> do
-        off <- connection.pipelineStatus
-        _ <- connection.enterPipelineMode
-        on <- connection.pipelineStatus
-        _ <- traverse (\sql -> connection.sendQueryParams sql [] Lq.Text) ["select 1", "select 1 / 0", "select 3"]
-        _ <- connection.pipelineSync
+        off <- Lq.pipelineStatus connection
+        _ <- Lq.enterPipelineMode connection
+        on <- Lq.pipelineStatus connection
+        _ <- traverse (\sql -> Lq.sendQueryParams connection sql [] Lq.Text) ["select 1", "select 1 / 0", "select 3"]
+        _ <- Lq.pipelineSync connection
         _ <- takeCommandResults connection
         _ <- takeCommandResults connection
-        aborted <- connection.pipelineStatus
+        aborted <- Lq.pipelineStatus connection
         _ <- takeCommandResults connection
         _ <- takeResult connection
-        recovered <- connection.pipelineStatus
-        _ <- connection.exitPipelineMode
+        recovered <- Lq.pipelineStatus connection
+        _ <- Lq.exitPipelineMode connection
         pure (off, on, aborted, recovered)

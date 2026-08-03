@@ -17,20 +17,20 @@ spec adapter =
   describe "exitPipelineMode" do
     it "returns the connection to its non-pipeline status" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.enterPipelineMode
-        exited <- connection.exitPipelineMode
-        after <- connection.pipelineStatus
+        _ <- Lq.enterPipelineMode connection
+        exited <- Lq.exitPipelineMode connection
+        after <- Lq.pipelineStatus connection
         pure (exited, after)
 
     it "fails with work pending and succeeds once drained" \conninfo ->
       differential adapter conninfo \connection -> do
-        entered <- connection.enterPipelineMode
-        sent <- connection.sendQueryParams "select 1" [] Lq.Text
-        prematureExit <- connection.exitPipelineMode
-        synced <- connection.pipelineSync
+        entered <- Lq.enterPipelineMode connection
+        sent <- Lq.sendQueryParams connection "select 1" [] Lq.Text
+        prematureExit <- Lq.exitPipelineMode connection
+        synced <- Lq.pipelineSync connection
         results <- takeCommandResults connection
         syncResult <- takeResult connection
-        exited <- connection.exitPipelineMode
+        exited <- Lq.exitPipelineMode connection
         pure (entered, sent, prematureExit, synced, results, syncResult, exited)
 
     -- Reproduces the cleanup sequence that hasql's cleanUpAfterInterruption +
@@ -41,13 +41,13 @@ spec adapter =
     -- sequence that hasql uses.
     it "recovers after mid-pipeline cancel (mirrors cleanUpAfterInterruption)" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.enterPipelineMode
-        _ <- connection.sendPrepare "s1" "select 1" Nothing
-        _ <- connection.sendQueryPrepared "s1" [] Lq.Text
-        _ <- connection.sendPrepare "s2" "select pg_sleep($1)" (Just [float8Oid])
-        _ <- connection.sendQueryPrepared "s2" [Just ("0.5", Lq.Text)] Lq.Text
-        _ <- connection.pipelineSync
-        _ <- connection.sendFlushRequest
+        _ <- Lq.enterPipelineMode connection
+        _ <- Lq.sendPrepare connection "s1" "select 1" Nothing
+        _ <- Lq.sendQueryPrepared connection "s1" [] Lq.Text
+        _ <- Lq.sendPrepare connection "s2" "select pg_sleep($1)" (Just [float8Oid])
+        _ <- Lq.sendQueryPrepared connection "s2" [Just ("0.5", Lq.Text)] Lq.Text
+        _ <- Lq.pipelineSync connection
+        _ <- Lq.sendFlushRequest connection
         -- Consume what toPipelineIO would have read before the timeout:
         -- parse1 result + separator, exec1 result + separator, parse2 result + separator.
         _ <- takeCommandResults connection
@@ -55,17 +55,17 @@ spec adapter =
         _ <- takeCommandResults connection
         -- exec2 (pg_sleep) is still running; cancel it to simulate the
         -- timeout-triggered cancel in cleanUpAfterInterruption.
-        mHandle <- connection.getCancel
-        _ <- for mHandle (.cancel)
+        mHandle <- Lq.getCancel connection
+        _ <- for mHandle Lq.cancel
         -- cleanUpAfterInterruption: drain1, then drain2 (after cancel)
         _ <- drainResults connection
         _ <- drainResults connection
         -- leavePipeline: new Sync, drain, Flush, drain
-        _ <- connection.pipelineSync
+        _ <- Lq.pipelineSync connection
         _ <- drainResults connection
-        _ <- connection.sendFlushRequest
+        _ <- Lq.sendFlushRequest connection
         _ <- drainResults connection
-        exited <- connection.exitPipelineMode
+        exited <- Lq.exitPipelineMode connection
         pure exited
 
     -- Reproduces the failure seen in hasql's "Leaves the connection usable
@@ -82,35 +82,35 @@ spec adapter =
     -- captures.
     it "recovers after timeout interrupts mid-pipeline read" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.enterPipelineMode
-        _ <- connection.sendPrepare "s1" "select $1::int" Nothing
-        _ <- connection.sendQueryPrepared "s1" [Just ("42", Lq.Text)] Lq.Text
-        _ <- connection.sendPrepare "s2" "select pg_sleep($1)" (Just [float8Oid])
-        _ <- connection.sendQueryPrepared "s2" [Just ("0.1", Lq.Text)] Lq.Text
-        _ <- connection.pipelineSync
+        _ <- Lq.enterPipelineMode connection
+        _ <- Lq.sendPrepare connection "s1" "select $1::int" Nothing
+        _ <- Lq.sendQueryPrepared connection "s1" [Just ("42", Lq.Text)] Lq.Text
+        _ <- Lq.sendPrepare connection "s2" "select pg_sleep($1)" (Just [float8Oid])
+        _ <- Lq.sendQueryPrepared connection "s2" [Just ("0.1", Lq.Text)] Lq.Text
+        _ <- Lq.pipelineSync connection
         -- Interrupt the read just like hasql's Connection.use + timeout does.
         _ <- timeout 50000 (drainResults connection)
         -- cleanUpAfterInterruption
         _ <- drainResults connection
-        mHandle <- connection.getCancel
-        _ <- for mHandle (.cancel)
+        mHandle <- Lq.getCancel connection
+        _ <- for mHandle Lq.cancel
         _ <- drainResults connection
         -- leavePipeline (including the retry that hasql performs)
-        pipelineStatusBefore <- connection.pipelineStatus
+        pipelineStatusBefore <- Lq.pipelineStatus connection
         exited <-
           if pipelineStatusBefore == Lq.PipelineOn
             then do
-              _ <- connection.pipelineSync
+              _ <- Lq.pipelineSync connection
               _ <- drainResults connection
-              _ <- connection.sendFlushRequest
+              _ <- Lq.sendFlushRequest connection
               _ <- drainResults connection
-              ok <- connection.exitPipelineMode
+              ok <- Lq.exitPipelineMode connection
               if ok
                 then pure True
                 else do
                   _ <- drainResults connection
-                  connection.exitPipelineMode
+                  Lq.exitPipelineMode connection
             else pure True
-        afterStatus <- connection.pipelineStatus
+        afterStatus <- Lq.pipelineStatus connection
         usable <- execScenario "select 99" connection
         pure (exited, afterStatus, usable)

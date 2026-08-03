@@ -42,7 +42,7 @@ import Pqi.Conformance.Prelude
 
 -- | Run 'Pqi.exec' and observe its result (if any).
 execScenario :: ByteString -> Pqi.Connection -> IO (Maybe ResultObservation)
-execScenario sql connection = connection.exec sql >>= traverse observeResult
+execScenario sql connection = Pqi.exec connection sql >>= traverse observeResult
 
 -- | Run a sequence of statements with 'Pqi.exec', observing every result.
 execAllScenario :: [ByteString] -> Pqi.Connection -> IO [Maybe ResultObservation]
@@ -56,7 +56,7 @@ observed ::
   Pqi.Connection ->
   IO (Maybe ResultObservation)
 observed sql params resultFormat connection =
-  connection.execParams sql params resultFormat >>= traverse observeResult
+  Pqi.execParams connection sql params resultFormat >>= traverse observeResult
 
 -- | Collect and observe results with 'Pqi.getResult' until it reports
 -- completion with 'Nothing'.
@@ -64,7 +64,7 @@ drainResults :: Pqi.Connection -> IO [ResultObservation]
 drainResults connection = go []
   where
     go acc =
-      connection.getResult >>= \case
+      Pqi.getResult connection >>= \case
         Nothing -> pure (reverse acc)
         Just result -> do
           observation <- observeResult result
@@ -72,7 +72,7 @@ drainResults connection = go []
 
 -- | One 'Pqi.getResult' step, observed.
 takeResult :: Pqi.Connection -> IO (Maybe ResultObservation)
-takeResult connection = connection.getResult >>= traverse observeResult
+takeResult connection = Pqi.getResult connection >>= traverse observeResult
 
 -- | The results of one pipelined command: its result and the 'Nothing'
 -- separator that ends it.
@@ -91,7 +91,7 @@ collectCopyOut connection = go (1000 :: Int) []
   where
     go 0 acc = pure (reverse acc)
     go n acc =
-      connection.getCopyData False >>= \case
+      Pqi.getCopyData connection False >>= \case
         CopyOutRow row -> go (n - 1) (CopyOutRow row : acc)
         terminal -> pure (reverse (terminal : acc))
 
@@ -122,9 +122,9 @@ flushUntilDone doFlush = go (10000 :: Int)
 -- run inside a transaction block.
 inTransaction :: Pqi.Connection -> IO a -> IO a
 inTransaction connection action = do
-  _ <- connection.exec "begin"
+  _ <- Pqi.exec connection "begin"
   result <- action
-  _ <- connection.exec "commit"
+  _ <- Pqi.exec connection "commit"
   pure result
 
 boolOid :: Word32

@@ -16,9 +16,9 @@ spec adapter =
   describe "flush" do
     it "flushes queued output to completion in non-blocking mode" \conninfo ->
       differential adapter conninfo \connection -> do
-        setOk <- connection.setnonblocking True
-        sent <- connection.sendQuery "select 1"
-        flushed <- flushUntilDone connection.flush
+        setOk <- Pqi.setnonblocking connection True
+        sent <- Pqi.sendQuery connection "select 1"
+        flushed <- flushUntilDone (Pqi.flush connection)
         results <- drainResults connection
-        restoreOk <- connection.setnonblocking False
+        restoreOk <- Pqi.setnonblocking connection False
         pure (setOk, sent, flushed, results, restoreOk)

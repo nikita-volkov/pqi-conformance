@@ -19,40 +19,40 @@ spec adapter =
     Parity.spec adapter
     it "collects pipelined queries per sync" \conninfo ->
       differential adapter conninfo \connection -> do
-        entered <- connection.enterPipelineMode
+        entered <- Lq.enterPipelineMode connection
         sent <-
           traverse
-            (\sql -> connection.sendQueryParams sql [] Lq.Text)
+            (\sql -> Lq.sendQueryParams connection sql [] Lq.Text)
             ["select 1 :: int4", "select 'two' :: text", "select 3 :: int4, 'three' :: text"]
-        synced <- connection.pipelineSync
+        synced <- Lq.pipelineSync connection
         first <- takeCommandResults connection
         second <- takeCommandResults connection
         third <- takeCommandResults connection
         syncResult <- takeResult connection
         idle <- takeResult connection
-        exited <- connection.exitPipelineMode
+        exited <- Lq.exitPipelineMode connection
         pure (entered, sent, synced, first, second, third, syncResult, idle, exited)
 
     it "aborts the rest of the pipeline after an error" \conninfo ->
       differential adapter conninfo \connection -> do
-        entered <- connection.enterPipelineMode
+        entered <- Lq.enterPipelineMode connection
         sent <-
           traverse
-            (\sql -> connection.sendQueryParams sql [] Lq.Text)
+            (\sql -> Lq.sendQueryParams connection sql [] Lq.Text)
             ["select 1", "select 1 / 0", "select 3"]
-        synced <- connection.pipelineSync
+        synced <- Lq.pipelineSync connection
         first <- takeCommandResults connection
         failed <- takeCommandResults connection
         aborted <- takeCommandResults connection
         syncResult <- takeResult connection
-        exited <- connection.exitPipelineMode
+        exited <- Lq.exitPipelineMode connection
         pure (entered, sent, synced, first, failed, aborted, syncResult, exited)
 
     it "returns a sync result when called without prior commands" \conninfo ->
       differential adapter conninfo \connection -> do
-        entered <- connection.enterPipelineMode
-        synced <- connection.pipelineSync
+        entered <- Lq.enterPipelineMode connection
+        synced <- Lq.pipelineSync connection
         syncResult <- takeResult connection
         trailing <- takeResult connection
-        exited <- connection.exitPipelineMode
+        exited <- Lq.exitPipelineMode connection
         pure (entered, synced, syncResult, trailing, exited)

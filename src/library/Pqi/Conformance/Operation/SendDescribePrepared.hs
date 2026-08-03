@@ -16,8 +16,8 @@ spec adapter =
   describe "sendDescribePrepared" do
     it "describes a prepared statement asynchronously" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.sendPrepare "conformance_send_desc" "select $1 :: int4 * 2" Nothing
+        _ <- Pqi.sendPrepare connection "conformance_send_desc" "select $1 :: int4 * 2" Nothing
         _ <- drainResults connection
-        sent <- connection.sendDescribePrepared "conformance_send_desc"
+        sent <- Pqi.sendDescribePrepared connection "conformance_send_desc"
         results <- drainResults connection
         pure (sent, results)

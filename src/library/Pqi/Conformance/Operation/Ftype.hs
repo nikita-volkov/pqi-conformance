@@ -15,9 +15,9 @@ spec adapter =
   describe "ftype" do
     it "reports type OIDs and degrades out of range" \conninfo ->
       differential adapter conninfo \connection -> do
-        result <- connection.exec "select 1 :: int4, 'x' :: text, true, 1.5 :: float8, 1 :: int2"
+        result <- Pqi.exec connection "select 1 :: int4, 'x' :: text, true, 1.5 :: float8, 1 :: int2"
         for result \r -> do
-          n <- r.nfields
-          types <- traverse r.ftype [0 .. n - 1]
-          outOfRange <- r.ftype 9
+          n <- Pqi.nfields r
+          types <- traverse (Pqi.ftype r) [0 .. n - 1]
+          outOfRange <- Pqi.ftype r 9
           pure (types, outOfRange)

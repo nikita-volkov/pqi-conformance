@@ -25,9 +25,9 @@ spec adapter =
         (path, handle) <- openBinaryTempFile "/tmp" "pqi-conformance-import-oid"
         ByteString.hPut handle "pqi conformance payload"
         hClose handle
-        _ <- connection.loUnlink explicitOid
-        imported <- connection.loImportWithOid path explicitOid
-        unlinked <- for imported connection.loUnlink
+        _ <- Pqi.loUnlink connection explicitOid
+        imported <- Pqi.loImportWithOid connection path explicitOid
+        unlinked <- for imported (Pqi.loUnlink connection)
         removeFile path
         pure (imported, unlinked)
   where

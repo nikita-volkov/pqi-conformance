@@ -15,7 +15,7 @@ spec adapter =
   describe "getlength" do
     it "reports byte lengths across cell shapes" \conninfo ->
       differential adapter conninfo \connection -> do
-        result <- connection.exec "select 'hello' :: text, 'héllo' :: text, '' :: text, null :: int4"
+        result <- Pqi.exec connection "select 'hello' :: text, 'héllo' :: text, '' :: text, null :: int4"
         for result \r -> do
-          n <- r.nfields
-          traverse (r.getlength 0) [0 .. n - 1]
+          n <- Pqi.nfields r
+          traverse (Pqi.getlength r 0) [0 .. n - 1]

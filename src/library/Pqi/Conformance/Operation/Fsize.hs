@@ -15,9 +15,9 @@ spec adapter =
   describe "fsize" do
     it "reports type sizes and degrades out of range" \conninfo ->
       differential adapter conninfo \connection -> do
-        result <- connection.exec "select 1 :: int2, 1 :: int4, 1 :: int8, 'x' :: text, true"
+        result <- Pqi.exec connection "select 1 :: int2, 1 :: int4, 1 :: int8, 'x' :: text, true"
         for result \r -> do
-          n <- r.nfields
-          sizes <- traverse r.fsize [0 .. n - 1]
-          outOfRange <- r.fsize 9
+          n <- Pqi.nfields r
+          sizes <- traverse (Pqi.fsize r) [0 .. n - 1]
+          outOfRange <- Pqi.fsize r 9
           pure (sizes, outOfRange)

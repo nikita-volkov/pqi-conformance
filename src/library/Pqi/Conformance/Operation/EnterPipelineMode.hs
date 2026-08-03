@@ -15,9 +15,9 @@ spec adapter =
   describe "enterPipelineMode" do
     it "enters pipeline mode and is idempotent" \conninfo ->
       differential adapter conninfo \connection -> do
-        before <- connection.pipelineStatus
-        entered <- connection.enterPipelineMode
-        enteredAgain <- connection.enterPipelineMode
-        while <- connection.pipelineStatus
-        _ <- connection.exitPipelineMode
+        before <- Pqi.pipelineStatus connection
+        entered <- Pqi.enterPipelineMode connection
+        enteredAgain <- Pqi.enterPipelineMode connection
+        while <- Pqi.pipelineStatus connection
+        _ <- Pqi.exitPipelineMode connection
         pure (before, entered, enteredAgain, while)

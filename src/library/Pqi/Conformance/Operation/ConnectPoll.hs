@@ -16,8 +16,8 @@ spec adapter =
   describe "connectPoll" do
     it "reaches a terminal polling status and a ready connection" \conninfo ->
       differentialConnect adapter conninfo \adapter' conninfo' -> do
-        connection <- adapter'.connectStart conninfo'
-        terminal <- pollUntilDone connection.connectPoll
-        connStatus <- connection.status
-        connection.finish
+        connection <- Pqi.connectStart adapter' conninfo'
+        terminal <- pollUntilDone (Pqi.connectPoll connection)
+        connStatus <- Pqi.status connection
+        Pqi.finish connection
         pure (terminal, connStatus)

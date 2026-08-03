@@ -16,12 +16,12 @@ spec adapter =
   describe "describePortal" do
     it "describes a declared cursor" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "begin"
+        _ <- Pqi.exec connection "begin"
         _ <-
-          connection.exec
+          Pqi.exec connection
             "declare conformance_cursor cursor for select 1 :: int4 as n, 'x' :: text as t"
-        connection.describePortal "conformance_cursor" >>= traverse observeResult
+        Pqi.describePortal connection "conformance_cursor" >>= traverse observeResult
 
     it "rejects an unknown portal" \conninfo ->
       differential adapter conninfo \connection ->
-        connection.describePortal "conformance_no_portal" >>= traverse observeResult
+        Pqi.describePortal connection "conformance_no_portal" >>= traverse observeResult

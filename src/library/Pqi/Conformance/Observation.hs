@@ -68,45 +68,45 @@ data CellObservation = CellObservation
 -- | Project a result into a 'ResultObservation'.
 observeResult :: Lq.Result -> IO ResultObservation
 observeResult result = do
-  status <- result.resultStatus
+  status <- Lq.resultStatus result
   errorFields <-
     traverse
-      (\code -> (,) code <$> result.resultErrorField code)
+      (\code -> (,) code <$> Lq.resultErrorField result code)
       [minBound .. maxBound]
-  errorMessage <- result.resultErrorMessage
-  ntuples <- result.ntuples
-  nfields <- result.nfields
-  nparams <- result.nparams
-  paramTypes <- traverse result.paramtype [0 .. nparams - 1]
+  errorMessage <- Lq.resultErrorMessage result
+  ntuples <- Lq.ntuples result
+  nfields <- Lq.nfields result
+  nparams <- Lq.nparams result
+  paramTypes <- traverse (Lq.paramtype result) [0 .. nparams - 1]
   fields <- traverse (observeField result) [0 .. nfields - 1]
   rows <- traverse (\row -> traverse (observeCell result row) [0 .. nfields - 1]) [0 .. ntuples - 1]
-  cmdStatus <- result.cmdStatus
-  cmdTuples <- result.cmdTuples
+  cmdStatus <- Lq.cmdStatus result
+  cmdTuples <- Lq.cmdTuples result
   pure ResultObservation {..}
 
 observeField :: Lq.Result -> Int32 -> IO FieldObservation
 observeField result column = do
-  name <- result.fname column
-  typeOid <- result.ftype column
-  modifier <- result.fmod column
-  size <- result.fsize column
-  format <- result.fformat column
-  tableOid <- result.ftable column
-  tableColumn <- result.ftablecol column
+  name <- Lq.fname result column
+  typeOid <- Lq.ftype result column
+  modifier <- Lq.fmod result column
+  size <- Lq.fsize result column
+  format <- Lq.fformat result column
+  tableOid <- Lq.ftable result column
+  tableColumn <- Lq.ftablecol result column
   pure FieldObservation {..}
 
 observeCell :: Lq.Result -> Int32 -> Int32 -> IO CellObservation
 observeCell result row column = do
-  value <- result.getvalue row column
-  isNull <- result.getisnull row column
-  length <- result.getlength row column
+  value <- Lq.getvalue result row column
+  isNull <- Lq.getisnull result row column
+  length <- Lq.getlength result row column
   pure CellObservation {..}
 
 -- | A snapshot of the comparable portion of a connection's state. The
 -- candidate and the reference open their connections from the same conninfo
 -- string, so the conninfo-derived identity accessors agree as well.
 data ConnectionObservation = ConnectionObservation
-  { status :: Lq.ConnStatus,
+  { connectionStatus :: Lq.ConnStatus,
     transactionStatus :: Lq.TransactionStatus,
     serverVersion :: Int,
     serverVersionParam :: Maybe ByteString,
@@ -119,25 +119,25 @@ data ConnectionObservation = ConnectionObservation
     options :: Maybe ByteString,
     connectionNeedsPassword :: Bool,
     connectionUsedPassword :: Bool,
-    isNull :: Bool
+    connectionIsNull :: Bool
   }
   deriving stock (Eq, Show)
 
 -- | Project a connection into a 'ConnectionObservation'.
 observeConnection :: Lq.Connection -> IO ConnectionObservation
 observeConnection connection = do
-  status <- connection.status
-  transactionStatus <- connection.transactionStatus
-  serverVersion <- connection.serverVersion
-  serverVersionParam <- connection.parameterStatus "server_version"
-  protocolVersion <- connection.protocolVersion
-  db <- connection.db
-  user <- connection.user
-  pass <- connection.pass
-  host <- connection.host
-  port <- connection.port
-  options <- connection.options
-  connectionNeedsPassword <- connection.connectionNeedsPassword
-  connectionUsedPassword <- connection.connectionUsedPassword
-  let isNull = connection.isNullConnection
+  connectionStatus <- Lq.status connection
+  transactionStatus <- Lq.transactionStatus connection
+  serverVersion <- Lq.serverVersion connection
+  serverVersionParam <- Lq.parameterStatus connection "server_version"
+  protocolVersion <- Lq.protocolVersion connection
+  db <- Lq.db connection
+  user <- Lq.user connection
+  pass <- Lq.pass connection
+  host <- Lq.host connection
+  port <- Lq.port connection
+  options <- Lq.options connection
+  connectionNeedsPassword <- Lq.connectionNeedsPassword connection
+  connectionUsedPassword <- Lq.connectionUsedPassword connection
+  let connectionIsNull = Lq.isNullConnection connection
   pure ConnectionObservation {..}

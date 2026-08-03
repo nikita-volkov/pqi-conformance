@@ -14,4 +14,4 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
   describe "pass" do
     it "reports the password from the conninfo" \conninfo ->
-      differential adapter conninfo (.pass)
+      differential adapter conninfo Pqi.pass

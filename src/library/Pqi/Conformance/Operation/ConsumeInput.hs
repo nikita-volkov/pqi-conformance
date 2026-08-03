@@ -17,11 +17,11 @@ spec adapter =
   describe "consumeInput" do
     it "drives result collection together with isBusy" \conninfo ->
       differential adapter conninfo \connection -> do
-        sent <- connection.sendQuery "select 42"
+        sent <- Pqi.sendQuery connection "select 42"
         let settle (0 :: Int) = pure False
             settle n = do
-              consumed <- connection.consumeInput
-              busy <- connection.isBusy
+              consumed <- Pqi.consumeInput connection
+              busy <- Pqi.isBusy connection
               if busy then threadDelay 1000 >> settle (n - 1) else pure consumed
         consumed <- settle 10000
         results <- drainResults connection

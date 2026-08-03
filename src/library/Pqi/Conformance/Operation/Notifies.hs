@@ -5,7 +5,7 @@
 -- candidate and the reference are distinct backends — so 'bePid' is omitted
 -- from the cross-adapter comparison. Each scenario that receives a
 -- notification instead asserts independently (per adapter) that
--- @notification.bePid == backendPID connection@, verifying that the PID field
+-- @Pqi.bePid notification == backendPID connection@, verifying that the PID field
 -- is correctly populated without comparing it across adapters.
 module Pqi.Conformance.Operation.Notifies
   ( spec,
@@ -23,36 +23,36 @@ spec adapter =
   describe "notifies" do
     it "is empty with no pending notifications" \conninfo ->
       differential adapter conninfo \connection ->
-        fmap channelAndPayload <$> connection.notifies
+        fmap channelAndPayload <$> Pqi.notifies connection
 
     it "delivers a listen/notify round-trip and then drains" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "listen conformance_channel"
-        _ <- connection.exec "notify conformance_channel, 'payload-1'"
-        notification <- connection.notifies
-        pid <- connection.backendPID
-        for_ notification \n -> n.bePid `shouldBe` pid
-        drained <- fmap channelAndPayload <$> connection.notifies
+        _ <- Pqi.exec connection "listen conformance_channel"
+        _ <- Pqi.exec connection "notify conformance_channel, 'payload-1'"
+        notification <- Pqi.notifies connection
+        pid <- Pqi.backendPID connection
+        for_ notification \n -> Pqi.bePid n `shouldBe` pid
+        drained <- fmap channelAndPayload <$> Pqi.notifies connection
         pure (fmap channelAndPayload notification, drained)
 
     it "queues notifications in order" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "listen conformance_channel"
-        _ <- connection.exec "notify conformance_channel, 'first'"
-        _ <- connection.exec "notify conformance_channel, 'second'"
-        first <- connection.notifies
-        second <- connection.notifies
-        third <- connection.notifies
-        pid <- connection.backendPID
-        for_ first \n -> n.bePid `shouldBe` pid
-        for_ second \n -> n.bePid `shouldBe` pid
+        _ <- Pqi.exec connection "listen conformance_channel"
+        _ <- Pqi.exec connection "notify conformance_channel, 'first'"
+        _ <- Pqi.exec connection "notify conformance_channel, 'second'"
+        first <- Pqi.notifies connection
+        second <- Pqi.notifies connection
+        third <- Pqi.notifies connection
+        pid <- Pqi.backendPID connection
+        for_ first \n -> Pqi.bePid n `shouldBe` pid
+        for_ second \n -> Pqi.bePid n `shouldBe` pid
         pure (fmap channelAndPayload first, fmap channelAndPayload second, fmap channelAndPayload third)
 
     it "stops delivery after unlisten" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "listen conformance_channel"
-        _ <- connection.exec "unlisten conformance_channel"
-        _ <- connection.exec "notify conformance_channel, 'lost'"
-        fmap channelAndPayload <$> connection.notifies
+        _ <- Pqi.exec connection "listen conformance_channel"
+        _ <- Pqi.exec connection "unlisten conformance_channel"
+        _ <- Pqi.exec connection "notify conformance_channel, 'lost'"
+        fmap channelAndPayload <$> Pqi.notifies connection
   where
-    channelAndPayload notification = (notification.relname, notification.extra)
+    channelAndPayload notification = (Pqi.relname notification, Pqi.extra notification)

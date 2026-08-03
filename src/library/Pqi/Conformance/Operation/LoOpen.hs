@@ -18,13 +18,13 @@ spec adapter =
     it "opens an existing object and rejects a missing one" \conninfo ->
       differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- connection.loCreat
+          oid <- Pqi.loCreat connection
           opened <- for oid \o -> do
-            fd <- connection.loOpen o ReadWriteMode
-            traverse_ connection.loClose fd
+            fd <- Pqi.loOpen connection o ReadWriteMode
+            traverse_ (Pqi.loClose connection) fd
             pure (isJust fd)
           loUnlink' oid connection
-          missing <- connection.loOpen 4242424 ReadMode
+          missing <- Pqi.loOpen connection 4242424 ReadMode
           pure (opened, isJust missing)
   where
-    loUnlink' oid connection = traverse_ connection.loUnlink oid
+    loUnlink' oid connection = traverse_ (Pqi.loUnlink connection) oid

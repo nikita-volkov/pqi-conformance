@@ -13,4 +13,4 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
   describe "user" do
     it "reports the user name from the conninfo" \conninfo ->
-      differential adapter conninfo (.user)
+      differential adapter conninfo Pqi.user

@@ -16,11 +16,11 @@ spec adapter =
   describe "putCopyData" do
     it "streams rows into a COPY FROM STDIN" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "create temporary table conformance_copy (id int4, label text)"
+        _ <- Pqi.exec connection "create temporary table conformance_copy (id int4, label text)"
         started <- execScenario "copy conformance_copy from stdin" connection
-        firstRow <- connection.putCopyData "1\thello\n"
-        secondRow <- connection.putCopyData "2\tworld\n"
-        ended <- connection.putCopyEnd Nothing
+        firstRow <- Pqi.putCopyData connection "1\thello\n"
+        secondRow <- Pqi.putCopyData connection "2\tworld\n"
+        ended <- Pqi.putCopyEnd connection Nothing
         outcome <- drainResults connection
         check <-
           execScenario "select count(*), min(label), max(label) from conformance_copy" connection
@@ -28,9 +28,9 @@ spec adapter =
 
     it "feeds malformed data that the server rejects" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "create temporary table conformance_copy_bad (id int4)"
+        _ <- Pqi.exec connection "create temporary table conformance_copy_bad (id int4)"
         started <- execScenario "copy conformance_copy_bad from stdin" connection
-        row <- connection.putCopyData "not-a-number\n"
-        ended <- connection.putCopyEnd Nothing
+        row <- Pqi.putCopyData connection "not-a-number\n"
+        ended <- Pqi.putCopyEnd connection Nothing
         outcome <- drainResults connection
         pure (started, row, ended, outcome)

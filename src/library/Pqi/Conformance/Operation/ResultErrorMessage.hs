@@ -23,9 +23,9 @@ spec adapter =
     it "matches the full formatted libpq error string on failure and is empty on success" \conninfo ->
       differential adapter conninfo \connection -> do
         failed <-
-          connection.exec "do $$ begin raise exception 'conformance error'; end $$"
-            >>= traverse (.resultErrorMessage)
+          Pqi.exec connection "do $$ begin raise exception 'conformance error'; end $$"
+            >>= traverse Pqi.resultErrorMessage
         succeeded <-
-          connection.exec "select 1"
-            >>= traverse (.resultErrorMessage)
+          Pqi.exec connection "select 1"
+            >>= traverse Pqi.resultErrorMessage
         pure (failed, succeeded)

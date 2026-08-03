@@ -17,11 +17,11 @@ spec adapter =
     it "reports the number of bytes written" \conninfo ->
       differential adapter conninfo \connection ->
         inTransaction connection do
-          oid <- connection.loCreat
+          oid <- Pqi.loCreat connection
           outcome <- for oid \o -> do
-            fd <- connection.loOpen o ReadWriteMode
-            written <- for fd \f -> connection.loWrite f "hello, large object"
-            traverse_ connection.loClose fd
+            fd <- Pqi.loOpen connection o ReadWriteMode
+            written <- for fd \f -> Pqi.loWrite connection f "hello, large object"
+            traverse_ (Pqi.loClose connection) fd
             pure written
-          traverse_ connection.loUnlink oid
+          traverse_ (Pqi.loUnlink connection) oid
           pure outcome

@@ -16,7 +16,7 @@ spec adapter =
   describe "escapeByteaConn" do
     it "escapes a range of binary inputs" \conninfo ->
       differential adapter conninfo \connection ->
-        traverse connection.escapeByteaConn byteaCases
+        traverse (Pqi.escapeByteaConn connection) byteaCases
   where
     byteaCases =
       [ "",

@@ -55,8 +55,8 @@ differential ::
   Expectation
 differential adapter adminConninfo scenario =
   withTestDb adminConninfo \testConninfo -> do
-    candidate <- bracket (adapter.connectdb testConninfo) (.finish) scenario
-    reference <- bracket (Reference.adapter.connectdb testConninfo) (.finish) scenario
+    candidate <- bracket (Pqi.connectdb adapter testConninfo) Pqi.finish scenario
+    reference <- bracket (Pqi.connectdb Reference.adapter testConninfo) Pqi.finish scenario
     candidate `shouldBe` reference
 
 -- Create a uniquely named database, run the action against it, and drop it on
@@ -76,9 +76,9 @@ withTestDb adminConninfo action = do
 
 adminExec :: ByteString -> ByteString -> IO ()
 adminExec conninfo sql = do
-  conn <- Reference.adapter.connectdb conninfo
-  _ <- conn.exec sql
-  conn.finish
+  conn <- Pqi.connectdb Reference.adapter conninfo
+  _ <- Pqi.exec conn sql
+  Pqi.finish conn
 
 -- | Like 'differential', but for scenarios that exercise connection
 -- establishment itself ('Pqi.connectdb' on a broken conninfo,

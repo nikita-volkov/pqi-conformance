@@ -67,16 +67,16 @@ runScenario ::
   ByteString ->
   IO (Maybe (Lq.ExecStatus, Maybe ByteString))
 runScenario adapter conninfo =
-  bracket (adapter.connectdb conninfo) (.finish) \connection -> do
+  bracket (Lq.connectdb adapter conninfo) Lq.finish \connection -> do
     -- Build a pipeline with a fast query followed by a slow one, mirroring the
     -- sequence hasql issues.  Two prepared statements keep pendingParses in
     -- play, matching the real-world reproduction.
-    _ <- connection.enterPipelineMode
-    _ <- connection.sendPrepare "s1" "select $1::int" Nothing
-    _ <- connection.sendQueryPrepared "s1" [Just ("42", Lq.Text)] Lq.Text
-    _ <- connection.sendPrepare "s2" "select pg_sleep($1)" (Just [float8Oid])
-    _ <- connection.sendQueryPrepared "s2" [Just ("0.1", Lq.Text)] Lq.Text
-    _ <- connection.pipelineSync
+    _ <- Lq.enterPipelineMode connection
+    _ <- Lq.sendPrepare connection "s1" "select $1::int" Nothing
+    _ <- Lq.sendQueryPrepared connection "s1" [Just ("42", Lq.Text)] Lq.Text
+    _ <- Lq.sendPrepare connection "s2" "select pg_sleep($1)" (Just [float8Oid])
+    _ <- Lq.sendQueryPrepared connection "s2" [Just ("0.1", Lq.Text)] Lq.Text
+    _ <- Lq.pipelineSync connection
 
     -- Interrupt the read mid-pipeline, exactly as hasql's timeout does: the
     -- slow pg_sleep is still running when the read is abandoned.
@@ -85,27 +85,27 @@ runScenario adapter conninfo =
     -- cleanUpAfterInterruption: drain, cancel, drain.  The cancel is sent while
     -- the pipeline is mid-flight; on buggy code its SIGINT can arrive late.
     _ <- drainResults connection
-    mHandle <- connection.getCancel
-    _ <- for mHandle (.cancel)
+    mHandle <- Lq.getCancel connection
+    _ <- for mHandle Lq.cancel
     _ <- drainResults connection
 
     -- leavePipeline: the exact restore sequence hasql performs, including the
     -- retry it falls back to.
-    statusBefore <- connection.pipelineStatus
+    statusBefore <- Lq.pipelineStatus connection
     when (statusBefore == Lq.PipelineOn) do
-      _ <- connection.pipelineSync
+      _ <- Lq.pipelineSync connection
       _ <- drainResults connection
-      _ <- connection.sendFlushRequest
+      _ <- Lq.sendFlushRequest connection
       _ <- drainResults connection
-      ok <- connection.exitPipelineMode
+      ok <- Lq.exitPipelineMode connection
       unless ok do
         _ <- drainResults connection
-        void connection.exitPipelineMode
+        void (Lq.exitPipelineMode connection)
 
     -- The victim.  It must not be cancelled by the stale signal.
     execScenario "select 99" connection >>= \case
       Nothing -> pure (Just (Lq.FatalError, Just "no-result"))
       Just observation ->
-        case observation.status of
+        case status observation of
           Lq.TuplesOk -> pure Nothing
-          status -> pure (Just (status, fromMaybe Nothing (lookup Lq.DiagSqlstate observation.errorFields)))
+          status -> pure (Just (status, fromMaybe Nothing (lookup Lq.DiagSqlstate (errorFields observation))))

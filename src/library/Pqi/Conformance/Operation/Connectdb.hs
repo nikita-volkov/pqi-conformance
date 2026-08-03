@@ -27,33 +27,33 @@ spec adapter = do
 
     it "accepts a URI-format conninfo" \conninfo ->
       differentialConnect adapter conninfo \adapter' conninfo' -> do
-        connection <- adapter'.connectdb (kvToUri conninfo')
-        s <- connection.status
-        connection.finish
+        connection <- Pqi.connectdb adapter' (kvToUri conninfo')
+        s <- Pqi.status connection
+        Pqi.finish connection
         pure s
 
     it "rejects an unknown database" \conninfo ->
       differentialConnect adapter conninfo \adapter' conninfo' -> do
-        connection <- adapter'.connectdb (conninfo' <> " dbname=pqi_no_such_db")
-        observation <- connection.status
-        nullness <- pure connection.isNullConnection
-        connection.finish
+        connection <- Pqi.connectdb adapter' (conninfo' <> " dbname=pqi_no_such_db")
+        observation <- Pqi.status connection
+        nullness <- pure (Pqi.isNullConnection connection)
+        Pqi.finish connection
         pure (observation, nullness)
 
     it "rejects an unknown user" \conninfo ->
       differentialConnect adapter conninfo \adapter' conninfo' -> do
-        connection <- adapter'.connectdb (conninfo' <> " user=pqi_no_such_user")
-        observation <- connection.status
-        connection.finish
+        connection <- Pqi.connectdb adapter' (conninfo' <> " user=pqi_no_such_user")
+        observation <- Pqi.status connection
+        Pqi.finish connection
         pure observation
 
     it "defaults the user like the reference when user is omitted" \conninfo ->
       differentialConnect adapter conninfo \adapter' conninfo' -> do
-        connection <- adapter'.connectdb (dropUser conninfo')
-        resolvedUser <- connection.user
-        observedStatus <- connection.status
-        observedError <- connection.errorMessage
-        connection.finish
+        connection <- Pqi.connectdb adapter' (dropUser conninfo')
+        resolvedUser <- Pqi.user connection
+        observedStatus <- Pqi.status connection
+        observedError <- Pqi.errorMessage connection
+        Pqi.finish connection
         pure (resolvedUser, observedStatus, observedError)
 
   describe "SCRAM-SHA-256 authentication" do
@@ -66,7 +66,7 @@ spec adapter = do
               }
 
           scramScenario :: Pqi.Connection -> IO (Maybe ResultObservation)
-          scramScenario connection = connection.exec "select 1 as scram_works" >>= traverse observeResult
+          scramScenario connection = Pqi.exec connection "select 1 as scram_works" >>= traverse observeResult
        in TcPg.run scramConfig \(host, port) -> do
             let conninfo =
                   ByteString.Char8.pack
@@ -76,8 +76,8 @@ spec adapter = do
                         <> show port
                         <> " user=scram password=secret dbname=scram"
                     )
-            candidate <- bracket (adapter.connectdb conninfo) (.finish) scramScenario
-            reference <- bracket (Reference.adapter.connectdb conninfo) (.finish) scramScenario
+            candidate <- bracket (Pqi.connectdb adapter conninfo) Pqi.finish scramScenario
+            reference <- bracket (Pqi.connectdb Reference.adapter conninfo) Pqi.finish scramScenario
             candidate `shouldBe` reference
 
 -- | Drop the @user=…@ token from a @key=value@ conninfo, leaving the user

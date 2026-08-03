@@ -50,7 +50,7 @@ spec adapter =
           Lq.Text
     it "DML with parameters" \conninfo ->
       differential adapter conninfo \connection -> do
-        _ <- connection.exec "create temporary table conformance_exec_params (id int4)"
+        _ <- Lq.exec connection "create temporary table conformance_exec_params (id int4)"
         insert <-
           observed
             "insert into conformance_exec_params values ($1), ($2)"
