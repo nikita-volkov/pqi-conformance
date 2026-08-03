@@ -35,8 +35,8 @@ module Pqi.Conformance.Scenario
   )
 where
 
-import qualified Pqi
 import Pqi (CopyOutResult (..), FlushStatus (..), PollingStatus (..))
+import qualified Pqi
 import Pqi.Conformance.Observation
 import Pqi.Conformance.Prelude
 
