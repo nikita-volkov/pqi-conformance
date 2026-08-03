@@ -140,10 +140,38 @@ jobs:
 
       - name: Commit the version update
         id: commit
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: Set package version to ${{ inputs.version }}
-          file_pattern: "*.cabal CHANGELOG.md"
+        # Other workflows (e.g. main-maintenance's format job) can push to
+        # master concurrently while this job is busy building/publishing, so
+        # a plain push can be rejected as non-fast-forward. Rebase onto the
+        # latest master and retry the push a few times before giving up.
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet -- '*.cabal' CHANGELOG.md; then
+            echo "No changes to commit"
+            echo "commit_hash=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+
+          git add -- '*.cabal' CHANGELOG.md
+          git commit -m "Set package version to ${{ inputs.version }}"
+
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:master; then
+              echo "commit_hash=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
+              exit 0
+            fi
+
+            echo "Push rejected (attempt ${attempt}), rebasing onto latest master and retrying..."
+            git fetch origin master
+            git rebase origin/master
+          done
+
+          echo "::error::Failed to push version update after multiple retries"
+          exit 1
 
       - name: Create release tag
         uses: mathieudutour/github-tag-action@v6.1
