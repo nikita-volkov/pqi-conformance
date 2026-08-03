@@ -18,7 +18,8 @@ spec adapter =
     it "sends a parameterized query and collects its result" \conninfo ->
       differential adapter conninfo \connection -> do
         sent <-
-          Lq.sendQueryParams connection
+          Lq.sendQueryParams
+            connection
             "select $1 :: int4 + $2 :: int4, $3 :: text"
             [Just (int4Oid, "40", Lq.Text), Just (int4Oid, "2", Lq.Text), Nothing]
             Lq.Text

@@ -18,7 +18,8 @@ spec adapter =
       differential adapter conninfo \connection -> do
         _ <- Pqi.exec connection "begin"
         _ <-
-          Pqi.exec connection
+          Pqi.exec
+            connection
             "declare conformance_cursor cursor for select 1 :: int4 as n, 'x' :: text as t"
         Pqi.describePortal connection "conformance_cursor" >>= traverse observeResult
 
