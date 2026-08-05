@@ -1,6 +1,10 @@
+# v0.1.2.0
+
+- Added another test.
+
 # v0.1.1.1
 
-Fix the docs
+- Fixed the docs.
 
 # v0.1.1.0
 
