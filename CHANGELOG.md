@@ -1,3 +1,7 @@
+# v0.1.2.1
+
+- Fixed the publishing.
+
 # v0.1.2.0
 
 - Added another test.
