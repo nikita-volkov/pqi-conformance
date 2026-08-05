@@ -56,6 +56,13 @@ spec adapter = do
         Pqi.finish connection
         pure (resolvedUser, observedStatus, observedError)
 
+    it "forwards extra conninfo params like the reference (e.g. application_name)" \conninfo ->
+      differentialConnect adapter conninfo \adapter' conninfo' -> do
+        connection <- Pqi.connectdb adapter' (conninfo' <> " application_name=pqi-conformance-test")
+        observedApplicationName <- Pqi.parameterStatus connection "application_name"
+        Pqi.finish connection
+        pure observedApplicationName
+
   describe "SCRAM-SHA-256 authentication" do
     it "the candidate authenticates and queries like the FFI reference" \_ ->
       let scramConfig =

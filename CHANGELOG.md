@@ -1,3 +1,9 @@
+# v0.1.1.0
+
+## Non-breaking
+
+- Added differential coverage for extra conninfo params (e.g. `application_name`) supplied at connect time, closing the gap where only `SET`-based updates were covered
+
 # v0.1.0.1
 
 ## Fixes
