@@ -43,6 +43,7 @@ import qualified Pqi.Conformance.Operation.ExecPrepared as ExecPrepared
 import qualified Pqi.Conformance.Operation.ExitPipelineMode as ExitPipelineMode
 import qualified Pqi.Conformance.Operation.Fformat as Fformat
 import qualified Pqi.Conformance.Operation.Finish as Finish
+import qualified Pqi.Conformance.Operation.Finish.PostFinishSend as Finish.PostFinishSend
 import qualified Pqi.Conformance.Operation.Flush as Flush
 import qualified Pqi.Conformance.Operation.Fmod as Fmod
 import qualified Pqi.Conformance.Operation.Fname as Fname
@@ -132,6 +133,7 @@ specs adapter = parallel do
     NewNullConnection.spec adapter
     IsNullConnection.spec adapter
     Finish.spec adapter
+    Finish.PostFinishSend.spec adapter
     Reset.spec adapter
     ResetStart.spec adapter
     ResetPoll.spec adapter

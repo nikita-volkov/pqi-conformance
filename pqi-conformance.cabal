@@ -115,6 +115,7 @@ library
     Pqi.Conformance.Operation.ExitPipelineMode
     Pqi.Conformance.Operation.Fformat
     Pqi.Conformance.Operation.Finish
+    Pqi.Conformance.Operation.Finish.PostFinishSend
     Pqi.Conformance.Operation.Flush
     Pqi.Conformance.Operation.Fmod
     Pqi.Conformance.Operation.Fname
