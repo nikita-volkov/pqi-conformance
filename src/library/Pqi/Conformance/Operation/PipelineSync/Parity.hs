@@ -13,7 +13,6 @@ where
 import qualified Pqi
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
-import Pqi.Conformance.Observation
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (observed, takeCommandResults, takeResult)
 import Test.Hspec

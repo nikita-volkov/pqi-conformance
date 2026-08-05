@@ -116,7 +116,6 @@ import qualified Pqi.Conformance.Operation.TransactionStatus as TransactionStatu
 import qualified Pqi.Conformance.Operation.UnescapeBytea as UnescapeBytea
 import qualified Pqi.Conformance.Operation.UnsafeFreeResult as UnsafeFreeResult
 import qualified Pqi.Conformance.Operation.User as User
-import Pqi.Conformance.Prelude
 import Test.Hspec
 
 -- | The full conformance battery: every per-operation spec under one shared
