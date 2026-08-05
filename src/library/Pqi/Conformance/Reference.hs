@@ -9,6 +9,8 @@ module Pqi.Conformance.Reference
 where
 
 import qualified Database.PostgreSQL.LibPQ as LibPQ
+import qualified GHC.Exts
+import qualified GHC.IO
 import qualified Pqi
 import Pqi.Conformance.Prelude
 
@@ -119,8 +121,8 @@ mkResult r =
       Pqi.resultErrorMessage = LibPQ.resultErrorMessage r,
       Pqi.resultErrorField = \field -> LibPQ.resultErrorField r (toFieldCode field),
       Pqi.unsafeFreeResult = LibPQ.unsafeFreeResult r,
-      Pqi.ntuples = fromRow <$> LibPQ.ntuples r,
-      Pqi.nfields = fromColumn <$> LibPQ.nfields r,
+      Pqi.ntuples = strictly r (fromRow <$> LibPQ.ntuples r),
+      Pqi.nfields = strictly r (fromColumn <$> LibPQ.nfields r),
       Pqi.fname = \column -> LibPQ.fname r (toColumn column),
       Pqi.fnumber = \name -> fmap fromColumn <$> LibPQ.fnumber r name,
       Pqi.ftable = \column -> fromOid <$> LibPQ.ftable r (toColumn column),
@@ -138,6 +140,25 @@ mkResult r =
       Pqi.cmdStatus = LibPQ.cmdStatus r,
       Pqi.cmdTuples = LibPQ.cmdTuples r
     }
+
+-- | Read a number out of a result handle, forcing it while the handle is still
+-- guaranteed to be alive.
+--
+-- @postgresql-libpq@ imports @PQntuples@ and @PQnfields@ as /pure/ functions
+-- and defines the wrappers as @withResult res (return . toRow . c_PQntuples)@,
+-- so the C call escapes 'Foreign.ForeignPtr.withForeignPtr' as an unevaluated
+-- thunk over the raw @PGresult@ pointer. Should the handle become unreachable
+-- before that thunk is forced, its @PQclear@ finalizer has already freed the
+-- memory and the number read is garbage — which made the reference disagree
+-- with a correct candidate whenever a collection happened to land in the
+-- window. Every other accessor is imported in 'IO' and is unaffected.
+strictly :: LibPQ.Result -> IO Int32 -> IO Int32
+strictly r io = do
+  !n <- io
+  touch r
+  pure n
+  where
+    touch x = GHC.IO.IO \s -> case GHC.Exts.touch# x s of s' -> (# s', () #)
 
 -- | Build a 'Pqi.Cancel' whose field closes over the given
 -- @postgresql-libpq@ cancellation handle.

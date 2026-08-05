@@ -1,3 +1,9 @@
+# v0.1.2.2
+
+## Fixes
+
+- Fixed the reference adapter's `ntuples` and `nfields` intermittently returning garbage, which made the differential suite fail correct candidates. `postgresql-libpq` imports `PQntuples` and `PQnfields` as pure functions and lets the resulting thunk escape `withForeignPtr`, so if the result handle got collected before the count was forced, the number was read from memory that `PQclear` had already freed. Both counts are now forced while the handle is still alive.
+
 # v0.1.2.1
 
 - Fixed the publishing.
