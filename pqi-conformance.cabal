@@ -169,6 +169,7 @@ library
     Pqi.Conformance.Operation.Reset
     Pqi.Conformance.Operation.ResetPoll
     Pqi.Conformance.Operation.ResetStart
+    Pqi.Conformance.Operation.ResStatus
     Pqi.Conformance.Operation.ResultErrorField
     Pqi.Conformance.Operation.ResultErrorMessage
     Pqi.Conformance.Operation.ResultStatus
@@ -201,6 +202,6 @@ library
     directory >=1.3 && <1.4,
     hspec >=2.11 && <2.12,
     postgresql-libpq >=0.11 && <0.12,
-    pqi ^>=0.1,
+    pqi ^>=1.0,
     testcontainers-postgresql ^>=0.2,
     text >=1.2 && <3,

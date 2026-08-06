@@ -48,7 +48,8 @@ The suite is organised as **one spec module per API operation**, under
 `Pqi.Conformance.Operation.*` — `...Operation.Exec`, `...Operation.ExecParams`,
 `...Operation.LoSeek`, `...Operation.Fnumber`, and so on, one for every public
 method of `Pqi.IsConnection`, `Pqi.IsResult`, and `Pqi.IsCancel`,
-plus the standalone `Pqi.unescapeBytea`. Each module holds the differential
+plus the connection-independent `Adapter` fields `Pqi.unescapeBytea` and
+`Pqi.resStatus`. Each module holds the differential
 scenarios that exercise that one operation (its happy paths, its edge cases,
 and its error paths). Shared scenario fragments live in
 `Pqi.Conformance.Scenario`.

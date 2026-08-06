@@ -22,7 +22,8 @@ adapter =
       Pqi.connectdb = \conninfo -> mkConnection <$> LibPQ.connectdb conninfo,
       Pqi.connectStart = \conninfo -> mkConnection <$> LibPQ.connectStart conninfo,
       Pqi.newNullConnection = mkConnection <$> LibPQ.newNullConnection,
-      Pqi.unescapeBytea = \input -> LibPQ.unescapeBytea input
+      Pqi.unescapeBytea = \input -> LibPQ.unescapeBytea input,
+      Pqi.resStatus = \execStatus -> LibPQ.resStatus (toExecStatus execStatus)
     }
 
 -- | Build a 'Pqi.Connection' whose fields close over the given
@@ -232,6 +233,21 @@ fromExecStatus = \case
   LibPQ.SingleTuple -> Pqi.SingleTuple
   LibPQ.PipelineSync -> Pqi.PipelineSync
   LibPQ.PipelineAbort -> Pqi.PipelineAbort
+
+toExecStatus :: Pqi.ExecStatus -> LibPQ.ExecStatus
+toExecStatus = \case
+  Pqi.EmptyQuery -> LibPQ.EmptyQuery
+  Pqi.CommandOk -> LibPQ.CommandOk
+  Pqi.TuplesOk -> LibPQ.TuplesOk
+  Pqi.CopyOut -> LibPQ.CopyOut
+  Pqi.CopyIn -> LibPQ.CopyIn
+  Pqi.CopyBoth -> LibPQ.CopyBoth
+  Pqi.BadResponse -> LibPQ.BadResponse
+  Pqi.NonfatalError -> LibPQ.NonfatalError
+  Pqi.FatalError -> LibPQ.FatalError
+  Pqi.SingleTuple -> LibPQ.SingleTuple
+  Pqi.PipelineSync -> LibPQ.PipelineSync
+  Pqi.PipelineAbort -> LibPQ.PipelineAbort
 
 fromConnStatus :: LibPQ.ConnStatus -> Pqi.ConnStatus
 fromConnStatus = \case

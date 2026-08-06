@@ -93,6 +93,7 @@ import qualified Pqi.Conformance.Operation.Prepare as Prepare
 import qualified Pqi.Conformance.Operation.ProtocolVersion as ProtocolVersion
 import qualified Pqi.Conformance.Operation.PutCopyData as PutCopyData
 import qualified Pqi.Conformance.Operation.PutCopyEnd as PutCopyEnd
+import qualified Pqi.Conformance.Operation.ResStatus as ResStatus
 import qualified Pqi.Conformance.Operation.Reset as Reset
 import qualified Pqi.Conformance.Operation.ResetPoll as ResetPoll
 import qualified Pqi.Conformance.Operation.ResetStart as ResetStart
@@ -218,6 +219,7 @@ specs adapter = parallel do
     SetErrorVerbosity.spec adapter
     -- Result inspection
     ResultStatus.spec adapter
+    ResStatus.spec adapter
     ResultErrorMessage.spec adapter
     ResultErrorField.spec adapter
     UnsafeFreeResult.spec adapter

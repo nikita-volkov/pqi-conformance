@@ -1,3 +1,9 @@
+# v1.0.0.0
+
+## Non-breaking
+
+- Differential spec for the new `resStatus` field of `Pqi.Adapter`
+
 # v0.1.2.2
 
 ## Fixes
