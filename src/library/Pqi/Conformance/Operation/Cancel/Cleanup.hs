@@ -4,8 +4,8 @@
 -- Root cause: in pqi-native, 'Pqi.getResult' returns 'Nothing' (the pipeline
 -- separator) __before__ reading the trailing 'ReadyForQuery' message, leaving
 -- @asyncPending = True@.  If 'Pqi.cancel' is called while @asyncPending@ is
--- still @True@ — as 'Hasql.Comms.Session.cleanUpAfterInterruption' does after
--- draining results — a cancel request is sent to the server even though the
+-- still @True@ - as 'Hasql.Comms.Session.cleanUpAfterInterruption' does after
+-- draining results - a cancel request is sent to the server even though the
 -- query has already finished.  The server receives the signal, sets
 -- @QueryCancelPending@, and the __next__ command (e.g. @ABORT@) is cancelled
 -- with SQLSTATE @57014@, leaving the connection unusable.
@@ -35,7 +35,7 @@ spec adapter =
     --      a stale cancel.
     --   3. drainResults reads the remaining ReadyForQuery.
     --   4. The connection re-enters serial mode.
-    --   5. exec runs a follow-up command — it must NOT be cancelled by the
+    --   5. exec runs a follow-up command - it must NOT be cancelled by the
     --      stale signal that arrived in step 2.
     it "does not corrupt subsequent commands when cancel is called after pipeline results are drained" \conninfo ->
       bracket (Lq.connectdb adapter conninfo) Lq.finish \connection -> do

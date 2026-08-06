@@ -8,8 +8,8 @@
 -- the comparison to protocol-derived information only.
 --
 -- Only protocol-derived information is captured: both adapters parse the same
--- wire bytes, so these fields genuinely agree. All result fields — including
--- the flat error message text and all structured error fields — are captured
+-- wire bytes, so these fields genuinely agree. All result fields - including
+-- the flat error message text and all structured error fields - are captured
 -- in full and compared byte-identically.
 module Pqi.Conformance.Observation
   ( ResultObservation (..),
@@ -31,7 +31,7 @@ data ResultObservation = ResultObservation
     -- | Every structured field of the error report, keyed by 'Lq.FieldCode'.
     -- All of them are carried by the wire error response.
     errorFields :: [(Lq.FieldCode, Maybe ByteString)],
-    -- | The flat formatted error message, byte-identical to libpq's
+    -- | The flat formatted error message, identical to libpq's
     -- @PQresultErrorMessage@ at DEFAULT verbosity.
     errorMessage :: Maybe ByteString,
     ntuples :: Int32,

@@ -1,8 +1,8 @@
 -- | Coverage for 'Pqi.notifies': @LISTEN@\/@NOTIFY@ delivery, queueing,
 -- and that @UNLISTEN@ stops delivery.
 --
--- The backend PID carried by a notification is connection-specific — the
--- candidate and the reference are distinct backends — so 'bePid' is omitted
+-- The backend PID carried by a notification is connection-specific - the
+-- candidate and the reference are distinct backends - so 'bePid' is omitted
 -- from the cross-adapter comparison. Each scenario that receives a
 -- notification instead asserts independently (per adapter) that
 -- @Pqi.bePid notification == backendPID connection@, verifying that the PID field

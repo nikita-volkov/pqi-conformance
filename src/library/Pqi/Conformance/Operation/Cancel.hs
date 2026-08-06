@@ -2,7 +2,7 @@
 -- both on an idle connection and against a running query (which then fails
 -- with SQLSTATE @57014@).
 --
--- The full 'Either' value is compared — not just success\/failure — so that
+-- The full 'Either' value is compared - not just success\/failure - so that
 -- any divergence in error text is caught.
 module Pqi.Conformance.Operation.Cancel
   ( spec,

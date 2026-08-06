@@ -9,18 +9,18 @@
 -- operations kept attempting to use the closed socket's file descriptor. The
 -- first such send after close typically failed fast with "Bad file
 -- descriptor", but in a process doing other concurrent socket I\/O (exactly
--- the situation in a real test suite or application — e.g. testcontainers
+-- the situation in a real test suite or application - e.g. testcontainers
 -- and a connection pool's own background threads keep other sockets open),
 -- that closed file descriptor number could already have been reused for an
 -- unrelated socket by the time of a second attempt. Writing to the (silently
 -- reused) fd then blocked waiting for buffer space that a completely
--- unrelated peer would never free — which is exactly what @hasql@'s
+-- unrelated peer would never free - which is exactly what @hasql@'s
 -- @cleanUpAfterInterruption@ flow does after a first send fails: it always
 -- re-attempts a further write to deallocate prepared statements.
 --
 -- This mirrors hasql-pool's @Sessions.closeConn@ helper, which deliberately
 -- calls 'Pqi.finish' on a connection and then keeps using it (to test that
--- the pool notices and evicts it) — a supported use of the low-level
+-- the pool notices and evicts it) - a supported use of the low-level
 -- @onLibpqConnection@ escape hatch, and the code path in which the hang was
 -- first observed (hasql-pool's @Specs.UseSpec@, "Connection errors cause
 -- eviction of connection").
@@ -72,7 +72,7 @@ spec adapter =
         _ <- Pqi.exec connection "select 1"
         Pqi.finish connection
         result <- timeout sendTimeoutMicros (try @SomeException (Pqi.exec connection "select 1"))
-        -- 'Nothing' means the send never completed within the bound — i.e.
+        -- 'Nothing' means the send never completed within the bound - i.e.
         -- it hung. Succeeding or throwing are both acceptable outcomes here;
         -- only hanging is not.
         isJust result `shouldBe` True

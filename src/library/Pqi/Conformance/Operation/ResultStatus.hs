@@ -1,5 +1,5 @@
 -- | Coverage for 'Pqi.resultStatus': the status reported for each kind of
--- result — tuples, a command, an empty query, and a failure.
+-- result - tuples, a command, an empty query, and a failure.
 module Pqi.Conformance.Operation.ResultStatus
   ( spec,
   )

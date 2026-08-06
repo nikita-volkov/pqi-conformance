@@ -3,7 +3,7 @@
 -- the connection.
 --
 -- Root cause: 'Pqi.cancel' opens a TCP connection to the postmaster, sends the
--- @CancelRequest@, and — in the buggy implementation — immediately closes its
+-- @CancelRequest@, and - in the buggy implementation - immediately closes its
 -- end.  The request can then sit unread in the postmaster's socket buffer while
 -- the client races ahead and issues its next query.  The postmaster eventually
 -- reads the request and delivers @SIGINT@ to the backend, which by then is

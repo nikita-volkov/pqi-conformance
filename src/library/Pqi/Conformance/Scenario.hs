@@ -1,9 +1,9 @@
 -- | Reusable scenario fragments shared by the per-operation spec modules.
 --
--- These are the recurring building blocks — running a query and observing its
+-- These are the recurring building blocks - running a query and observing its
 -- result, draining the asynchronous result stream, collecting a @COPY OUT@
 -- stream, driving a polling loop to its terminal status, and the handful of
--- well-known type OIDs — factored out so each operation module stays focused on
+-- well-known type OIDs - factored out so each operation module stays focused on
 -- the one operation it covers.
 module Pqi.Conformance.Scenario
   ( -- * Running queries

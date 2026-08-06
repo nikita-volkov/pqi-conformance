@@ -1,8 +1,8 @@
 -- | Coverage for 'Pqi.errorMessage': the connection-level error string.
 --
--- The goal is byte-identical output to libpq's @PQerrorMessage@ in all
--- documented scenarios. Error strings are compared in full — not just for
--- presence — so formatting bugs are caught. Scenarios are chosen to avoid
+-- The goal is identical output to libpq's @PQerrorMessage@ in all
+-- documented scenarios. Error strings are compared in full - not just for
+-- presence - so formatting bugs are caught. Scenarios are chosen to avoid
 -- statement-position fields (@'P'@), which depend on the client-stored query
 -- text and cannot be reproduced from wire fields alone.
 --

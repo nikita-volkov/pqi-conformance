@@ -1,7 +1,7 @@
 -- | Coverage for 'Pqi.getNotice': retrieving accumulated notices, which
 -- are present only while reporting is enabled and drain after retrieval.
 --
--- The notice text is compared byte-identically — both adapters must produce
+-- The notice text is compared byte-identically - both adapters must produce
 -- the same formatted string as libpq's notice processor at DEFAULT verbosity.
 -- At that verbosity, context (@'W'@ field) is suppressed for NOTICE-level
 -- messages, so the formatted string is just @\"NOTICE:  \<message\>\\n\"@.

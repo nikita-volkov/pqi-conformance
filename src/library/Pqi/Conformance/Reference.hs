@@ -1,6 +1,6 @@
 -- | The reference adapter: a direct @postgresql-libpq@ wrapper used as the
 -- ground truth in differential tests. It is intentionally independent of the
--- @pqi-ffi@ package (despite producing byte-identical output) so that
+-- @pqi-ffi@ package (despite producing identical output) so that
 -- adapter test suites can depend on @pqi-conformance@ without a circular
 -- dependency through @pqi-ffi@.
 module Pqi.Conformance.Reference
@@ -150,7 +150,7 @@ mkResult r =
 -- so the C call escapes 'Foreign.ForeignPtr.withForeignPtr' as an unevaluated
 -- thunk over the raw @PGresult@ pointer. Should the handle become unreachable
 -- before that thunk is forced, its @PQclear@ finalizer has already freed the
--- memory and the number read is garbage — which made the reference disagree
+-- memory and the number read is garbage - which made the reference disagree
 -- with a correct candidate whenever a collection happened to land in the
 -- window. Every other accessor is imported in 'IO' and is unaffected.
 strictly :: LibPQ.Result -> IO Int32 -> IO Int32

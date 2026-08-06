@@ -1,5 +1,5 @@
 -- | Coverage for 'Pqi.resultErrorField': the structured fields carried by
--- a wire error response — SQLSTATE, severity, primary message, detail, hint,
+-- a wire error response - SQLSTATE, severity, primary message, detail, hint,
 -- positions, internal query, context, and source location.
 --
 -- These all come from the wire error response and are compared in full

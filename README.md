@@ -10,7 +10,7 @@ library as a reference.
 
 ## Goal: full libpq fidelity
 
-The purpose of this suite is to enforce **byte-identical output to `libpq`**
+The purpose of this suite is to enforce **identical output to `libpq`**
 for every protocol-derived value. This means error message strings, notice
 text, result status, field metadata, cell data, and all structured error fields
 must all match `libpq`'s output exactly, not just in shape or presence.
@@ -26,26 +26,26 @@ asserts that the protocol-derived observations are equal.
 A small number of values are **structurally incomparable across connections**
 and are handled differently:
 
-- **`backendPID`** — the OS process ID of the backend. Each connection gets a
+- **`backendPID`** - the OS process ID of the backend. Each connection gets a
   distinct backend, so the two PIDs will never match. The spec asserts `> 0`
   independently for each adapter.
-- **`socket`** — the file descriptor of the client socket. Also
+- **`socket`** - the file descriptor of the client socket. Also
   connection-specific. Covered only by its own presence check.
-- **`Notify.bePid`** — the PID of the notifying backend. Since each adapter's
+- **`Notify.bePid`** - the PID of the notifying backend. Since each adapter's
   connection has its own backend, cross-adapter comparison would always fail.
   Instead, each adapter asserts independently that `notification.bePid ==
   backendPID connection` (a within-connection assertion that verifies the PID
   field is correctly populated).
 
 These omissions are a structural constraint of the differential testing
-approach, not an intentional leniency in the suite. All other values —
-including error message text, notice text, and cancel error text — are compared
+approach, not an intentional leniency in the suite. All other values -
+including error message text, notice text, and cancel error text - are compared
 in full.
 
 ## Structure: one module per operation
 
 The suite is organised as **one spec module per API operation**, under
-`Pqi.Conformance.Operation.*` — `...Operation.Exec`, `...Operation.ExecParams`,
+`Pqi.Conformance.Operation.*` - `...Operation.Exec`, `...Operation.ExecParams`,
 `...Operation.LoSeek`, `...Operation.Fnumber`, and so on, one for every public
 method of `Pqi.IsConnection`, `Pqi.IsResult`, and `Pqi.IsCancel`,
 plus the connection-independent `Adapter` fields `Pqi.unescapeBytea` and
@@ -56,7 +56,7 @@ and its error paths). Shared scenario fragments live in
 
 ## Usage
 
-An adapter's own test suite is a one-liner — it hands `specs` a `Proxy` of its
+An adapter's own test suite is a one-liner - it hands `specs` a `Proxy` of its
 connection type and `specs` takes care of booting the container and running the
 whole battery (every operation, the coverage meta-test, and SCRAM):
 
