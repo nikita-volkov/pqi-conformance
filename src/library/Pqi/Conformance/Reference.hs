@@ -204,9 +204,9 @@ fromLibPQLoFd (LibPQ.LoFd fd) = fromIntegral fd
 fromNotify :: LibPQ.Notify -> Pqi.Notify
 fromNotify notification =
   Pqi.Notify
-    { Pqi.relname = LibPQ.notifyRelname notification,
-      Pqi.bePid = fromIntegral (LibPQ.notifyBePid notification),
-      Pqi.extra = LibPQ.notifyExtra notification
+    { Pqi.notifyRelname = LibPQ.notifyRelname notification,
+      Pqi.notifyBePid = fromIntegral (LibPQ.notifyBePid notification),
+      Pqi.notifyExtra = LibPQ.notifyExtra notification
     }
 
 toFormat :: Pqi.Format -> LibPQ.Format

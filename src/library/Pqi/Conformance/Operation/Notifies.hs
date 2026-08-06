@@ -2,10 +2,10 @@
 -- and that @UNLISTEN@ stops delivery.
 --
 -- The backend PID carried by a notification is connection-specific - the
--- candidate and the reference are distinct backends - so 'bePid' is omitted
+-- candidate and the reference are distinct backends - so 'notifyBePid' is omitted
 -- from the cross-adapter comparison. Each scenario that receives a
 -- notification instead asserts independently (per adapter) that
--- @Pqi.bePid notification == backendPID connection@, verifying that the PID field
+-- @Pqi.notifyBePid notification == backendPID connection@, verifying that the PID field
 -- is correctly populated without comparing it across adapters.
 module Pqi.Conformance.Operation.Notifies
   ( spec,
@@ -31,7 +31,7 @@ spec adapter =
         _ <- Pqi.exec connection "notify conformance_channel, 'payload-1'"
         notification <- Pqi.notifies connection
         pid <- Pqi.backendPID connection
-        for_ notification \n -> Pqi.bePid n `shouldBe` pid
+        for_ notification \n -> Pqi.notifyBePid n `shouldBe` pid
         drained <- fmap channelAndPayload <$> Pqi.notifies connection
         pure (fmap channelAndPayload notification, drained)
 
@@ -44,8 +44,8 @@ spec adapter =
         second <- Pqi.notifies connection
         third <- Pqi.notifies connection
         pid <- Pqi.backendPID connection
-        for_ first \n -> Pqi.bePid n `shouldBe` pid
-        for_ second \n -> Pqi.bePid n `shouldBe` pid
+        for_ first \n -> Pqi.notifyBePid n `shouldBe` pid
+        for_ second \n -> Pqi.notifyBePid n `shouldBe` pid
         pure (fmap channelAndPayload first, fmap channelAndPayload second, fmap channelAndPayload third)
 
     it "stops delivery after unlisten" \conninfo ->
@@ -55,4 +55,4 @@ spec adapter =
         _ <- Pqi.exec connection "notify conformance_channel, 'lost'"
         fmap channelAndPayload <$> Pqi.notifies connection
   where
-    channelAndPayload notification = (Pqi.relname notification, Pqi.extra notification)
+    channelAndPayload notification = (Pqi.notifyRelname notification, Pqi.notifyExtra notification)
