@@ -1,3 +1,9 @@
+# v1.0.2.0
+
+## Non-breaking
+
+- Added a differential spec for `sendQueryParams` in pipeline mode, catching that the native adapter charges its own `ParseComplete` against a pending `sendPrepare` and so emits a spurious leading `CommandOk`, shifting every later result
+
 # v1.0.1.0
 
 ## Non-breaking
