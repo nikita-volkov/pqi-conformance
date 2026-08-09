@@ -1,3 +1,9 @@
+# v1.0.2.1
+
+## Fixes
+
+- Fix a flaky test
+
 # v1.0.2.0
 
 ## Non-breaking
