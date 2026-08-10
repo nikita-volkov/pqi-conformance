@@ -1,3 +1,9 @@
+# v1.0.3.0
+
+## Non-breaking
+
+- Added a `pipelineSync` spec covering resilience to an asynchronous interruption around a pipeline abort. Found the native adapter can leave a connection permanently unusable instead of failing outright, since none of its transport/connection code is exception-safe
+
 # v1.0.2.1
 
 ## Fixes

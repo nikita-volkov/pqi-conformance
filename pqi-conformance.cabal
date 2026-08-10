@@ -160,6 +160,7 @@ library
     Pqi.Conformance.Operation.Pass
     Pqi.Conformance.Operation.PipelineStatus
     Pqi.Conformance.Operation.PipelineSync
+    Pqi.Conformance.Operation.PipelineSync.Interruption
     Pqi.Conformance.Operation.PipelineSync.Parity
     Pqi.Conformance.Operation.Port
     Pqi.Conformance.Operation.Prepare

@@ -8,6 +8,7 @@ where
 import qualified Pqi
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
+import qualified Pqi.Conformance.Operation.PipelineSync.Interruption as Interruption
 import qualified Pqi.Conformance.Operation.PipelineSync.Parity as Parity
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (takeCommandResults, takeResult)
@@ -17,6 +18,7 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
   describe "pipelineSync" do
     Parity.spec adapter
+    Interruption.spec adapter
     it "collects pipelined queries per sync" \conninfo ->
       differential adapter conninfo \connection -> do
         entered <- Lq.enterPipelineMode connection
