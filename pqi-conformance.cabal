@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name: pqi-conformance
-version: 1.0.3.0
+version: 1.0.4.0
 category: Database, PostgreSQL, Testing
 synopsis: Differential conformance tests for pqi adapters
 description:
@@ -160,6 +160,7 @@ library
     Pqi.Conformance.Operation.Pass
     Pqi.Conformance.Operation.PipelineStatus
     Pqi.Conformance.Operation.PipelineSync
+    Pqi.Conformance.Operation.PipelineSync.InterruptedWait
     Pqi.Conformance.Operation.PipelineSync.Interruption
     Pqi.Conformance.Operation.PipelineSync.Parity
     Pqi.Conformance.Operation.Port

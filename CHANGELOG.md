@@ -1,3 +1,13 @@
+# v1.0.4.0
+
+## Non-breaking
+
+- Added a `pipelineSync` spec covering an async interruption landing while the sync's `ReadyForQuery` is the only thing left outstanding. An adapter that defers the interrupt across the wait for a frame, rather than across only the instructions that move the frame into its buffer, has delivery pinned to the instant the frame arrives - the one moment at which it holds a fully-read message it has not yet accounted for. Dropping that particular message costs the caller the connection rather than a result: the adapter still has a sync outstanding, so the next `getResult` goes back to the socket for a message the backend has already sent and will not send again.
+
+  Unlike the existing interruption spec, which sweeps a timer across the window, this one constructs it. A flush request separates the command's results from the sync's `ReadyForQuery`, and a `DEFERRABLE INITIALLY DEFERRED` trigger - fired by the backend's handling of `Sync` itself - holds that `ReadyForQuery` back for half a second, so the interrupt lands with 450ms of margin either side.
+
+  `pqi-native` 1.0.1.2 fails it, 1.0.1.3 passes it. Found via a hang in `hasql`'s `Integration.Sharing.Connection.Use.PipelineAbortedInterruptionCleanup`
+
 # v1.0.3.0
 
 ## Non-breaking
