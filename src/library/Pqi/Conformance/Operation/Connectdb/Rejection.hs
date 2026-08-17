@@ -37,43 +37,58 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
   describe "connectdb" do
     describe "a mid-handshake server rejection" do
-      it "the candidate reports a classified error like the reference, instead of throwing" \_ -> do
-        candidate <- attempt adapter
-        reference <- attempt Reference.adapter
-        candidate `shouldBe` reference
+      it "the candidate reports a classified error like the reference, instead of throwing" \_ ->
+        -- Both attempts share one listener (and so one port): the failure
+        -- message embeds the port number, and the candidate and reference
+        -- would otherwise always disagree on that one detail despite
+        -- matching in every way that matters.
+        withRejectingServer \port -> do
+          candidate <- attempt adapter port
+          reference <- attempt Reference.adapter port
+          candidate `shouldBe` reference
 
--- | Run 'Pqi.connectdb' against 'withRejectingServer' and report the
--- resulting status, or the exception's 'Show'n form if one escaped - which is
--- exactly what should never happen.
-attempt :: Pqi.Adapter -> IO (Either String Pqi.ConnStatus)
-attempt adapter =
-  withRejectingServer \port -> do
-    let conninfo =
-          "host=127.0.0.1 port=" <> ByteString.Char8.pack (show port) <> " dbname=x user=x"
-    result <- try @SomeException (Pqi.connectdb adapter conninfo)
-    case result of
-      Left err -> pure (Left (show err))
-      Right connection -> do
-        observedStatus <- Pqi.status connection
-        Pqi.finish connection
-        pure (Right observedStatus)
+-- | Run 'Pqi.connectdb' against the given port (see 'withRejectingServer')
+-- and report the resulting status and error message, or the exception's
+-- 'Show'n form if one escaped - which is exactly what should never happen.
+--
+-- @sslmode=disable@ keeps this comparable across adapters: libpq negotiates
+-- SSL before the startup packet by default, so without it the rejection
+-- would land during a preamble @pqi-native@ (which never attempts SSL) does
+-- not even send, and the two adapters would be reacting to the truncated
+-- bytes at different points in the protocol. The host is given as a literal
+-- IP rather than a name so libpq's failure message doesn't gain a resolved-IP
+-- parenthetical the candidate would then also have to reproduce.
+attempt :: Pqi.Adapter -> Socket.PortNumber -> IO (Either String (Pqi.ConnStatus, Maybe ByteString))
+attempt adapter port = do
+  let conninfo =
+        "host=127.0.0.1 port="
+          <> ByteString.Char8.pack (show port)
+          <> " dbname=x user=x sslmode=disable"
+  result <- try @SomeException (Pqi.connectdb adapter conninfo)
+  case result of
+    Left err -> pure (Left (show err))
+    Right connection -> do
+      observedStatus <- Pqi.status connection
+      observedError <- Pqi.errorMessage connection
+      Pqi.finish connection
+      pure (Right (observedStatus, observedError))
 
 -- | Bind a loopback listener on an ephemeral port and hand its port number to
--- the action, while a background thread accepts a single connection on it,
--- reads whatever the client has sent so far, writes the first three bytes of
--- an \'E\'rrorResponse frame (a type byte and two of its four length bytes)
--- and closes - never completing the frame.
+-- the action, while a background thread serves every connection made to it
+-- in turn: read whatever the client has sent so far, write the first three
+-- bytes of an \'E\'rrorResponse frame (a type byte and two of its four
+-- length bytes), and close - never completing the frame.
 --
--- The truncated write is safe to race against the client: the kernel queues
--- the connection at 'Socket.listen' time, so the client's own 'connect' and
--- initial 'send' succeed regardless of whether the server thread has reached
--- 'Socket.accept' yet, and the client only blocks once it starts reading the
--- (never-completed) response.
+-- The truncated write is safe to race against each client: the kernel
+-- queues a connection at 'Socket.listen' time, so a client's own 'connect'
+-- and initial 'send' succeed regardless of whether the server thread has
+-- reached 'Socket.accept' yet, and the client only blocks once it starts
+-- reading the (never-completed) response.
 withRejectingServer :: (Socket.PortNumber -> IO a) -> IO a
 withRejectingServer action =
   bracket open Socket.close \listener -> do
     port <- Socket.socketPort listener
-    _ <- forkIO (try @SomeException (serveOneRejection listener) >> pure ())
+    _ <- forkIO (try @SomeException (forever (serveOneRejection listener)) >> pure ())
     action port
   where
     open = do
@@ -84,7 +99,7 @@ withRejectingServer action =
           (Just "0")
       sock <- Socket.socket (Socket.addrFamily address) (Socket.addrSocketType address) (Socket.addrProtocol address)
       Socket.bind sock (Socket.addrAddress address)
-      Socket.listen sock 1
+      Socket.listen sock 8
       pure sock
 
 serveOneRejection :: Socket.Socket -> IO ()
