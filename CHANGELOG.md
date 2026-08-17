@@ -1,3 +1,9 @@
+# v1.0.5.0
+
+## Non-breaking
+
+- Added `sendQueryParams` specs covering a parameter list longer than 65535: `libpq` rejects it locally, without writing anything to the socket, both standalone and in the middle of a pipeline where the commands surrounding it must still get dispatched and drained without desync. `pqi-native` 1.0.1.3 fails both, encoding the parameter count as a wrapping 16-bit field instead of validating it, which corrupted the `Bind` message and desynchronized the connection; 1.0.1.4 fixes it. Found via `hasql` issue #326.
+
 # v1.0.4.0
 
 ## Non-breaking
