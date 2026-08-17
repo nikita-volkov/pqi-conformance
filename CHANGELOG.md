@@ -2,6 +2,8 @@
 
 ## Non-breaking
 
+- Added a `pipelineSync` spec covering a pipelined command whose result gets misattributed to a later, unrelated command after a prior pipeline aborted on a server error: a named-statement prepare discarded by the server after an earlier command in the same pipeline fails, followed by a plain `SELECT` in the next pipeline on the same connection, which must come back `TuplesOk` rather than short-circuiting as `CommandOk`. `pqi-native` 1.0.1.5 fails it, 1.0.1.6 fixes it. Found via `pqi-native` issue #9.
+
 - Added a `connectdb` spec covering a mid-handshake server rejection: a listener that accepts the connection, writes the first three bytes of an `E`rrorResponse frame, then closes before the frame completes - mirroring how a server sheds load with e.g. "sorry, too many clients already". A sound adapter reports `ConnectionBad` with a classified error message, the same way it reports any other rejected handshake, instead of letting the underlying I/O exception escape `connectdb`.
 
   Unlike most operation specs, this one drives a raw listener rather than the shared PostgreSQL container: the failure is about how an adapter reacts to a truncated read, which a real server only triggers racily (e.g. under `max_connections` pressure). A hand-rolled listener reproduces the exact byte pattern deterministically. Adds a new `network` dependency.
