@@ -14,8 +14,8 @@ import qualified Data.Text as Text
 import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
-import Pqi.Conformance.Prelude
 import qualified Pqi.Conformance.Operation.Connectdb.Rejection as Rejection
+import Pqi.Conformance.Prelude
 import qualified Pqi.Conformance.Reference as Reference
 import Test.Hspec
 import qualified TestcontainersPostgresql as TcPg
