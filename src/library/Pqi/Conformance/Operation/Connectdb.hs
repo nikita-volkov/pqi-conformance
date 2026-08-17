@@ -15,12 +15,15 @@ import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
 import Pqi.Conformance.Prelude
+import qualified Pqi.Conformance.Operation.Connectdb.Rejection as Rejection
 import qualified Pqi.Conformance.Reference as Reference
 import Test.Hspec
 import qualified TestcontainersPostgresql as TcPg
 
 spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter = do
+  Rejection.spec adapter
+
   describe "connectdb" do
     it "opens a usable connection" \conninfo ->
       differential adapter conninfo observeConnection
