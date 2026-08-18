@@ -1,3 +1,9 @@
+# v1.0.7.0
+
+## Non-breaking
+
+- Added a `connectdb` spec covering a `postgresql://` URI whose host segment is a percent-encoded Unix-socket directory, checked via the parsed host rather than the failure message. Found `pqi-native`'s URI parser never runs the host segment through percent-decoding, unlike every sibling component.
+
 # v1.0.6.0
 
 ## Non-breaking

@@ -15,6 +15,7 @@ import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
 import qualified Pqi.Conformance.Operation.Connectdb.Rejection as Rejection
+import qualified Pqi.Conformance.Operation.Connectdb.UnixSocketUri as UnixSocketUri
 import Pqi.Conformance.Prelude
 import qualified Pqi.Conformance.Reference as Reference
 import Test.Hspec
@@ -23,6 +24,7 @@ import qualified TestcontainersPostgresql as TcPg
 spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter = do
   Rejection.spec adapter
+  UnixSocketUri.spec adapter
 
   describe "connectdb" do
     it "opens a usable connection" \conninfo ->
