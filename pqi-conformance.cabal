@@ -94,6 +94,7 @@ library
     Pqi.Conformance.Operation.CmdStatus
     Pqi.Conformance.Operation.CmdTuples
     Pqi.Conformance.Operation.Connectdb
+    Pqi.Conformance.Operation.Connectdb.HandshakeReset
     Pqi.Conformance.Operation.Connectdb.MissingUnixSocketDirectory
     Pqi.Conformance.Operation.Connectdb.Rejection
     Pqi.Conformance.Operation.Connectdb.UnixSocketUri

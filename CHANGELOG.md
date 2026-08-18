@@ -4,6 +4,8 @@
 
 - Added a `connectdb` spec covering a host name that DNS cannot resolve, asserting `errorMessage` exactly against the reference. Found `pqi-native`'s failure message is the raw `Show`n `getAddrInfo` exception, worded unrelatedly to libpq's own (locale-translated) sentence for the same failure, so a downstream classifier that pattern-matches libpq's wording reacts inconsistently between the two adapters. Found via `hasql` issue #329.
 
+- Added a `connectdb` spec covering a handshake-time connection reset (`ECONNRESET`, forced via `SO_LINGER` 0) as distinct from a clean EOF. Found `pqi-native`'s `handshakeFailureMessage` only special-cases EOF with libpq-matching wording ("server closed the connection unexpectedly") and falls back to the raw `Show`n `IOException` (e.g. `Network.Socket.recvBuf: resource vanished (Connection reset by peer)`) for any other handshake-time I/O error, even though libpq itself reports a hard reset with the very same EOF wording. Found via `hasql` issue #329.
+
 # v1.0.8.0
 
 ## Non-breaking
