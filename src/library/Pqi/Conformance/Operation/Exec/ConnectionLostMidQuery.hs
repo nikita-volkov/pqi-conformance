@@ -6,24 +6,24 @@
 -- connection - via @SO_LINGER@ with a zero timeout, so the close sends a
 -- TCP @RST@ - instead of ever sending a result.
 --
--- Found in @pqi-native@: none of 'Pqi.Native.Query.exec',
+-- Was found in @pqi-native@: none of 'Pqi.Native.Query.exec',
 -- @execParams@, @prepare@, @execPrepared@, @describePrepared@, or
--- @describePortal@ wrap their read loop in any exception handler at all -
+-- @describePortal@ wrapped their read loop in any exception handler at all -
 -- unlike 'Pqi.Native.Connection.establish', which at least classifies a
--- broken read into a 'Pqi.errorMessage' (see 'HandshakeReset' and
--- 'Pqi.Conformance.Operation.Connectdb.UnresolvableHost' for cases where
--- that classification itself is wrong). A connection lost mid-query
--- instead escapes 'Pqi.exec' as a raw, uncaught 'System.IO.Error.IOException',
+-- broken read into a 'Pqi.errorMessage'. A connection lost mid-query used
+-- to escape 'Pqi.exec' as a raw, uncaught 'System.IO.Error.IOException',
 -- crashing the caller's thread outright rather than surfacing as any kind
 -- of classified failure. libpq itself never throws here: @PQexec@ returns a
 -- result with 'Pqi.FatalError' status and its own \"server closed the
 -- connection unexpectedly\" message, the same wording it uses for a reset
 -- during the handshake.
 --
--- Deliberately left failing, same as
--- 'Pqi.Conformance.Operation.Connectdb.HandshakeReset': the mismatch it
--- demonstrates - a classified failure on one side, an uncaught exception on
--- the other - is the point.
+-- Fixed by catching the read loop's 'System.IO.Error.IOException' in each of
+-- those six flows and converting it into a classified 'Pqi.FatalError'
+-- result via
+-- 'Pqi.Native.Connection.connectionLostMessage'\/'Pqi.Native.Query.connectionLostResult',
+-- the same classification 'HandshakeReset' exercises for the connect-time
+-- case.
 module Pqi.Conformance.Operation.Exec.ConnectionLostMidQuery
   ( spec,
   )

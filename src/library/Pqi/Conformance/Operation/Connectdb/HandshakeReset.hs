@@ -7,24 +7,23 @@
 -- Unlike a graceful close (see
 -- 'Pqi.Conformance.Operation.Connectdb.Rejection', which truncates an
 -- @ErrorResponse@ frame and closes normally), a reset is a genuinely
--- different I\/O failure shape, and it is not routed through the same code
--- path in @pqi-native@: 'Pqi.Native.Connection.handshakeFailureMessage'
--- special-cases an EOF (\"server closed the connection unexpectedly\",
--- matching libpq's own wording) but falls back to the raw 'Show'n
--- 'System.IO.Error.IOException' for anything else - and @ECONNRESET@
--- lands in that \"anything else\" branch.
+-- different I\/O failure shape, and was not routed through the same code
+-- path in @pqi-native@:
+-- 'Pqi.Native.Connection.handshakeFailureMessage' special-cased an EOF
+-- (\"server closed the connection unexpectedly\", matching libpq's own
+-- wording) but fell back to the raw 'Show'n 'System.IO.Error.IOException'
+-- for anything else - and @ECONNRESET@ landed in that \"anything else\"
+-- branch.
 --
--- Found in @pqi-native@
+-- Was found in @pqi-native@
 -- (<https://github.com/nikita-volkov/hasql/issues/329>): the candidate's
--- 'Pqi.errorMessage' for this failure is e.g. @Network.Socket.recvBuf:
+-- 'Pqi.errorMessage' for this failure was e.g. @Network.Socket.recvBuf:
 -- resource vanished (Connection reset by peer)@, entirely unlike libpq's
 -- own \"server closed the connection unexpectedly\" sentence for the same
--- underlying reset.
---
--- Deliberately left failing, same as
--- 'Pqi.Conformance.Operation.Connectdb.MissingUnixSocketDirectory' and
--- 'Pqi.Conformance.Operation.Connectdb.UnresolvableHost': the mismatch it
--- demonstrates is the point.
+-- underlying reset. Fixed by widening
+-- 'Pqi.Native.Connection.handshakeFailureMessage's classification to
+-- also recognize a hard reset (@ioe_type == ResourceVanished@), not just
+-- a clean EOF.
 module Pqi.Conformance.Operation.Connectdb.HandshakeReset
   ( spec,
   )

@@ -1,8 +1,8 @@
 -- | Coverage for @connectdb@ against a host name that DNS cannot resolve.
 --
--- Found in @pqi-native@
+-- Was found in @pqi-native@
 -- (<https://github.com/nikita-volkov/hasql/issues/329>): the candidate's
--- 'Pqi.errorMessage' is the raw 'Show'n form of the underlying
+-- 'Pqi.errorMessage' was the raw 'Show'n form of the underlying
 -- 'Network.Socket.getAddrInfo' exception (@could not connect to server:
 -- Network.Socket.getAddrInfo (called with preferred socket
 -- type\/protocol: ...): does not exist (Name or service not known)@),
@@ -11,12 +11,11 @@
 -- translate host name "..." to address: Name or service not known@).
 -- Both mention the resolver failure, but in unrelated phrasing, so a
 -- downstream classifier that pattern-matches on libpq's wording (e.g.
--- @Hasql.Connection@'s networking-error patterns) reacts differently to
+-- @Hasql.Connection@'s networking-error patterns) reacted differently to
 -- the two adapters for what is otherwise the same underlying failure.
---
--- Deliberately left failing, same as
--- 'Pqi.Conformance.Operation.Connectdb.MissingUnixSocketDirectory': the
--- mismatch it demonstrates is the point.
+-- Fixed in @pqi-native@'s @Pqi.Native.Connection.connectFailureMessage@,
+-- which now recognizes a resolver failure by its 'ioe_location' and
+-- reproduces libpq's own wording for it.
 module Pqi.Conformance.Operation.Connectdb.UnresolvableHost
   ( spec,
   )
