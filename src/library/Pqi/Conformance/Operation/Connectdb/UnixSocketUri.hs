@@ -14,7 +14,7 @@
 -- 'Pqi.errorMessage': both adapters fail to connect either way (there is no
 -- such socket directory), but their failure text is produced by unrelated,
 -- adapter-specific machinery (DNS resolution vs. a filesystem check) and
--- isn't expected to match byte-for-byte. What must match is the host each
+-- isn't expected to match exactly. What must match is the host each
 -- adapter parsed out of the conninfo, which is deterministic and
 -- OS\/locale-independent.
 module Pqi.Conformance.Operation.Connectdb.UnixSocketUri

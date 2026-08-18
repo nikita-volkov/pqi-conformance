@@ -6,7 +6,7 @@
 -- @ENOENT@ - so unlike
 -- 'Pqi.Conformance.Operation.Connectdb.UnixSocketUri' (whose two adapters
 -- fail via genuinely unrelated machinery: DNS resolution vs. a filesystem
--- check), this spec does compare 'Pqi.errorMessage' byte-for-byte. It's
+-- check), this spec does compare 'Pqi.errorMessage' exactly. It's
 -- expected to fail on @pqi-native@ right now, and deliberately left that
 -- way: the mismatch it demonstrates is exactly what confuses downstream
 -- string-matching classifiers.
