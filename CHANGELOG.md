@@ -1,3 +1,9 @@
+# Upcoming
+
+## Non-breaking
+
+- Added a `connectdb` spec covering a host name that DNS cannot resolve, asserting `errorMessage` exactly against the reference. Found `pqi-native`'s failure message is the raw `Show`n `getAddrInfo` exception, worded unrelatedly to libpq's own (locale-translated) sentence for the same failure, so a downstream classifier that pattern-matches libpq's wording reacts inconsistently between the two adapters. Found via `hasql` issue #329.
+
 # v1.0.8.0
 
 ## Non-breaking

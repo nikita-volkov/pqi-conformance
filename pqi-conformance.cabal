@@ -97,6 +97,7 @@ library
     Pqi.Conformance.Operation.Connectdb.MissingUnixSocketDirectory
     Pqi.Conformance.Operation.Connectdb.Rejection
     Pqi.Conformance.Operation.Connectdb.UnixSocketUri
+    Pqi.Conformance.Operation.Connectdb.UnresolvableHost
     Pqi.Conformance.Operation.ConnectionNeedsPassword
     Pqi.Conformance.Operation.ConnectionUsedPassword
     Pqi.Conformance.Operation.ConnectPoll

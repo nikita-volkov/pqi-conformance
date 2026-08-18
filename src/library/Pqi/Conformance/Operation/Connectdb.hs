@@ -17,6 +17,7 @@ import Pqi.Conformance.Observation
 import qualified Pqi.Conformance.Operation.Connectdb.MissingUnixSocketDirectory as MissingUnixSocketDirectory
 import qualified Pqi.Conformance.Operation.Connectdb.Rejection as Rejection
 import qualified Pqi.Conformance.Operation.Connectdb.UnixSocketUri as UnixSocketUri
+import qualified Pqi.Conformance.Operation.Connectdb.UnresolvableHost as UnresolvableHost
 import Pqi.Conformance.Prelude
 import qualified Pqi.Conformance.Reference as Reference
 import Test.Hspec
@@ -27,6 +28,7 @@ spec adapter = do
   Rejection.spec adapter
   UnixSocketUri.spec adapter
   MissingUnixSocketDirectory.spec adapter
+  UnresolvableHost.spec adapter
 
   describe "connectdb" do
     it "opens a usable connection" \conninfo ->
