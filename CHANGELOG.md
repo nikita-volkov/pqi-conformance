@@ -1,3 +1,9 @@
+# v1.0.8.0
+
+## Non-breaking
+
+- Added a `connectdb` spec covering a Unix-socket directory that doesn't exist, asserting `errorMessage` byte-for-byte against the reference. Found `pqi-native`'s failure message is the raw `Show`n `IOException`, which happens to contain `"could not connect to server"` - one of `Hasql.Connection`'s networking (transient) patterns - while libpq's message for the identical `ENOENT` doesn't, so the two adapters drive `Hasql.Connection.acquire` to opposite classifications of the same failure. Found via `hasql` issue #329.
+
 # v1.0.7.0
 
 ## Non-breaking

@@ -14,6 +14,7 @@ import qualified Data.Text as Text
 import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
+import qualified Pqi.Conformance.Operation.Connectdb.MissingUnixSocketDirectory as MissingUnixSocketDirectory
 import qualified Pqi.Conformance.Operation.Connectdb.Rejection as Rejection
 import qualified Pqi.Conformance.Operation.Connectdb.UnixSocketUri as UnixSocketUri
 import Pqi.Conformance.Prelude
@@ -25,6 +26,7 @@ spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter = do
   Rejection.spec adapter
   UnixSocketUri.spec adapter
+  MissingUnixSocketDirectory.spec adapter
 
   describe "connectdb" do
     it "opens a usable connection" \conninfo ->
