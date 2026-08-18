@@ -115,6 +115,7 @@ library
     Pqi.Conformance.Operation.EscapeIdentifier
     Pqi.Conformance.Operation.EscapeStringConn
     Pqi.Conformance.Operation.Exec
+    Pqi.Conformance.Operation.Exec.ConnectionLostMidQuery
     Pqi.Conformance.Operation.ExecParams
     Pqi.Conformance.Operation.ExecPrepared
     Pqi.Conformance.Operation.ExitPipelineMode

@@ -6,6 +6,8 @@
 
 - Added a `connectdb` spec covering a handshake-time connection reset (`ECONNRESET`, forced via `SO_LINGER` 0) as distinct from a clean EOF. Found `pqi-native`'s `handshakeFailureMessage` only special-cases EOF with libpq-matching wording ("server closed the connection unexpectedly") and falls back to the raw `Show`n `IOException` (e.g. `Network.Socket.recvBuf: resource vanished (Connection reset by peer)`) for any other handshake-time I/O error, even though libpq itself reports a hard reset with the very same EOF wording. Found via `hasql` issue #329.
 
+- Added an `exec` spec covering a connection reset while a query response is in flight, after a valid handshake. Found none of `pqi-native`'s query functions (`exec`, `execParams`, `prepare`, `execPrepared`, `describePrepared`, `describePortal`) wrap their read loop in any exception handler at all, so a connection lost mid-query escapes as a raw, uncaught `IOException` instead of any classified failure - unlike libpq, which returns a `FatalError` result with its own "server closed the connection unexpectedly" message and never throws. Found via `hasql` issue #329.
+
 # v1.0.8.0
 
 ## Non-breaking

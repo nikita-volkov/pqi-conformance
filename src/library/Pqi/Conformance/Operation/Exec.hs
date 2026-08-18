@@ -7,12 +7,15 @@ where
 
 import qualified Pqi
 import Pqi.Conformance.Harness
+import qualified Pqi.Conformance.Operation.Exec.ConnectionLostMidQuery as ConnectionLostMidQuery
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario
 import Test.Hspec
 
 spec :: Pqi.Adapter -> SpecWith ByteString
-spec adapter =
+spec adapter = do
+  ConnectionLostMidQuery.spec adapter
+
   describe "exec" do
     let forCase title sql =
           it title \conninfo -> differential adapter conninfo (execScenario sql)
