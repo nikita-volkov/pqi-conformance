@@ -8,8 +8,8 @@ where
 
 import qualified Pqi
 import Pqi.Conformance.Harness
-import Pqi.Conformance.Prelude
 import qualified Pqi.Conformance.Operation.SendQuery.ConnectionLostBeforeSend as ConnectionLostBeforeSend
+import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (drainResults)
 import Test.Hspec
 
