@@ -1,3 +1,9 @@
+# v1.0.10.0
+
+## Non-breaking
+
+- Added a `sendQuery` spec covering a connection whose write side is already gone at send time, distinct from `Exec.ConnectionLostMidQuery` (the connection dies while a result is in flight, so the *read* side fails). The connection's own socket is shut down on the write side directly (`shutdown(fd, SHUT_WR)`) rather than via a peer-initiated reset - a peer reset was tried first and found unreliable to force a failing write with: a single write issued a full second after the peer had already reset the connection was still silently accepted into the local kernel send buffer on this platform. Found `pqi-native`'s `sendAsync` - the function every one of `Pqi.sendQuery`/`sendQueryParams`/`sendPrepare`/`sendQueryPrepared`/`sendDescribePrepared`/`sendDescribePortal` is built on - let an escaped `IOException` from the send blow straight through it uncaught, instead of the `False` libpq's `PQsendQuery` always returns for a fatal send. This is the entry point `hasql`'s `Session` machinery actually exercises for every ordinary (non-pipelined) statement, so the raw exception used to escape as far as `Hasql.Connection.use`, misclassified as an async interruption instead of a send failure.
+
 # v1.0.9.0
 
 ## Non-breaking
