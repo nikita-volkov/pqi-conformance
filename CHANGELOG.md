@@ -1,3 +1,9 @@
+# v1.0.11.0
+
+## Non-breaking
+
+- Added `connectionNeedsPassword` and `connectionUsedPassword` specs covering trust auth with a `password=` field present in the conninfo (expected `False` for both, since the server never actually challenged for one) and a SCRAM-auth container both with and without a password supplied. Found `pqi-native`'s implementations tracked the conninfo `password=` field instead of libpq's `password_needed` auth-exchange state (`connectionNeedsPassword` was hardcoded `False`; `connectionUsedPassword` was `True` whenever a password string was merely present, trust auth or not).
+
 # v1.0.10.0
 
 ## Non-breaking
