@@ -76,7 +76,6 @@ module Pqi.Conformance.Operation.SendQuery.ConnectionLostBeforeSend
 where
 
 import Control.Exception (SomeException, try)
-import Control.Monad (void, when)
 import Foreign.C.Error (throwErrnoIfMinus1_)
 import Foreign.C.Types (CInt (..))
 import qualified Pqi

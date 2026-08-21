@@ -31,7 +31,6 @@ where
 
 import Control.Concurrent (forkIO)
 import Control.Exception (SomeException, bracket, try)
-import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Char8 as ByteString.Char8
 import qualified Network.Socket as Socket
 import qualified Network.Socket.ByteString as Socket.ByteString

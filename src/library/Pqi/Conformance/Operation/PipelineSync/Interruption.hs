@@ -41,7 +41,6 @@ where
 import Control.Exception (bracket)
 import qualified Data.ByteString.Char8 as ByteString.Char8
 import qualified Pqi
-import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (drainResults, float8Oid)
 import System.Timeout (timeout)
