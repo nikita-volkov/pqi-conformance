@@ -9,11 +9,13 @@ import qualified Pqi
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
+import qualified Pqi.Conformance.Operation.SendQueryParams.PipelineFlowControl as PipelineFlowControl
 import Pqi.Conformance.Scenario (drainResults, execScenario, int4Oid, takeCommandResults, takeResult)
 import Test.Hspec
 
 spec :: Pqi.Adapter -> SpecWith ByteString
-spec adapter =
+spec adapter = do
+  PipelineFlowControl.spec adapter
   describe "sendQueryParams" do
     it "sends a parameterized query and collects its result" \conninfo ->
       differential adapter conninfo \connection -> do

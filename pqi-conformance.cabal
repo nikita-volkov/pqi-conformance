@@ -188,8 +188,8 @@ library
     Pqi.Conformance.Operation.SendPrepare
     Pqi.Conformance.Operation.SendQuery
     Pqi.Conformance.Operation.SendQuery.ConnectionLostBeforeSend
-    Pqi.Conformance.Operation.SendQuery.PipelineFlowControl
     Pqi.Conformance.Operation.SendQueryParams
+    Pqi.Conformance.Operation.SendQueryParams.PipelineFlowControl
     Pqi.Conformance.Operation.SendQueryPrepared
     Pqi.Conformance.Operation.ServerVersion
     Pqi.Conformance.Operation.SetClientEncoding

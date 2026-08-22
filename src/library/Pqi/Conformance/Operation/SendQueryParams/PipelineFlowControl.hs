@@ -6,6 +6,13 @@
 -- /reading/ the socket while sending, so the server's output path drains and
 -- the server keeps consuming the client's commands.
 --
+-- The burst is submitted through 'Pqi.sendQueryParams' because @libpq@
+-- rejects @PQsendQuery@ itself in pipeline mode (\"PQsendQuery not allowed
+-- in pipeline mode\") - only the extended protocol is accepted there. The
+-- flow-control property being exercised is not specific to it, though: every
+-- send operation goes through the same driver-level flush, which is where
+-- the divergence lived.
+--
 -- The divergence: @pqi-native@'s 'Pqi.Native.Transport.send' was a bare
 -- blocking @sendAll@, which never reads while sending. Once the server has
 -- filled its send buffer and the client's receive buffer with results, it
@@ -26,9 +33,10 @@
 -- TCP's 128KB+128KB absorb the same burst without the client's send ever
 -- blocking. This suite reaches its container over TCP, so the scenario
 -- scales the burst until the TCP path saturates the same way: 1000
--- statements of ~2KB each (~2.1MB of commands) against the ~300-400KB of
--- combined kernel buffering on the way to the container. Each statement
--- returns an ~8KB result, so after a few dozen statements the server is
+-- commands of ~2KB each (~2.2MB on the wire, extended-protocol framing
+-- included) against the ~300-400KB of combined kernel buffering on the way
+-- to the container. Each command
+-- returns an ~8KB result, so after a few dozen commands the server is
 -- blocked writing while the client still has megabytes unsent - the deadlock
 -- is forced by buffer arithmetic, not by timing.
 --
@@ -46,7 +54,7 @@
 -- already covered by the per-operation specs, and what this scenario is
 -- about is that all 1000 commands complete 'Pqi.TuplesOk' and the pipeline
 -- reaches its sync.
-module Pqi.Conformance.Operation.SendQuery.PipelineFlowControl
+module Pqi.Conformance.Operation.SendQueryParams.PipelineFlowControl
   ( spec,
   )
 where
@@ -59,15 +67,16 @@ import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
--- | The payload each statement carries: 2KB, so a statement is ~2.1KB on the
--- wire while returning an ~8KB result - output expands ~4x over input.
+-- | The payload each command carries: 2KB, so a command is ~2.2KB on the
+-- wire (extended-protocol framing included) while returning an ~8KB result -
+-- output expands ~4x over input.
 statementLiteral :: ByteString
 statementLiteral = ByteString.Char8.replicate 2048 'x'
 
 statement :: ByteString
 statement = "select repeat('" <> statementLiteral <> "', 4)"
 
--- | 1000 statements, ~2.1MB of commands in all - far more than the client's
+-- | 1000 commands, ~2.2MB of wire traffic in all - far more than the client's
 -- send buffer and the server's receive buffer hold together (~300-400KB over
 -- the container's TCP link), so the client cannot finish sending unless the
 -- server keeps reading, which it cannot do unless the client keeps draining
@@ -82,7 +91,7 @@ deadlineMicros = 60_000_000
 
 spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter =
-  describe "sendQuery" do
+  describe "sendQueryParams" do
     describe "pipeline flow control" do
       it "sends a burst larger than the socket buffers while results stream back, without deadlocking" \conninfo ->
         differential adapter conninfo scenario
@@ -95,7 +104,7 @@ spec adapter =
 scenario :: Pqi.Connection -> IO (Either String (Bool, Int, Bool, Int, Int, Int32, Int, Maybe Pqi.ExecStatus, Bool, Bool))
 scenario connection = withDeadline deadlineMicros do
   entered <- Pqi.enterPipelineMode connection
-  sent <- traverse (\_ -> Pqi.sendQuery connection statement) [1 .. commandCount]
+  sent <- traverse (\_ -> Pqi.sendQueryParams connection statement [] Pqi.Text) [1 .. commandCount]
   synced <- Pqi.pipelineSync connection
   (commands, okCount, tuples, separatorAnomalies) <- collectCommands 0 0 0 0
   syncResult <- Pqi.getResult connection
@@ -143,13 +152,15 @@ withDeadline micros action = do
   let deliver = Concurrent.tryPutMVar box
   _ <-
     Concurrent.forkIO
-      ( Exception.try @Exception.SomeException action
-          >>= deliver . either (Left . show) Right
+      ( void
+          ( Exception.try @Exception.SomeException action
+              >>= deliver . either (Left . show) Right
+          )
       )
   timer <-
     Concurrent.forkIO
       ( Concurrent.threadDelay micros
-          >> deliver (Left ("deadline exceeded: no outcome within " <> show micros <> "us"))
+          >> void (deliver (Left ("deadline exceeded: no outcome within " <> show micros <> "us")))
       )
   outcome <- Concurrent.takeMVar box
   Concurrent.killThread timer
