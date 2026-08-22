@@ -9,6 +9,7 @@ where
 import qualified Pqi
 import Pqi.Conformance.Harness
 import qualified Pqi.Conformance.Operation.SendQuery.ConnectionLostBeforeSend as ConnectionLostBeforeSend
+import qualified Pqi.Conformance.Operation.SendQuery.PipelineFlowControl as PipelineFlowControl
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (drainResults)
 import Test.Hspec
@@ -16,6 +17,7 @@ import Test.Hspec
 spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter = do
   ConnectionLostBeforeSend.spec adapter
+  PipelineFlowControl.spec adapter
 
   describe "sendQuery" do
     let sendAndDrain sql conninfo =
