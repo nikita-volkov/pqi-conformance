@@ -15,14 +15,14 @@
 --
 -- The divergence: @pqi-native@'s 'Pqi.Native.Transport.send' was a bare
 -- blocking @sendAll@, which never reads while sending. Once the server has
--- filled its send buffer and the client's receive buffer with results, it
--- blocks in @ClientWrite@ and stops reading the client's commands; the
--- client, with bytes still unsent, blocks in @send@. Neither side can make
--- progress again. The real @libpq@ survives the same scenario:
--- @pqSendSome@ in @fe-misc.c@, on an incomplete send, calls @pqReadData()@
--- to absorb incoming data and then @pqWait(true, true, …)@ for
--- read-or-write readiness, looping until its output is fully sent - the
--- comment above that loop describes this exact deadlock.
+-- filled its output path with results, it blocks in @ClientWrite@ and stops
+-- reading the client's commands; the client, with bytes still unsent,
+-- blocks in @send@. Neither side can make progress again. The real @libpq@
+-- survives the same scenario: @pqSendSome@ in @fe-misc.c@, on an incomplete
+-- send, calls @pqReadData()@ to absorb incoming data and then
+-- @pqWait(true, true, …)@ for read-or-write readiness, looping until its
+-- output is fully sent - the comment above that loop describes this exact
+-- deadlock.
 --
 -- Where it surfaced: hasql's @manyLargeResultsViaPipeline@ benchmark hung
 -- (non-deterministically across runs, but always within the 100-command
@@ -30,15 +30,27 @@
 -- resolution moved from TCP @localhost@ to the Unix-domain socket (@\/tmp@).
 -- The deadlock was always there; the Unix socket merely exposed it, because
 -- its default 8KB+8KB buffers saturate on a ~10-16KB command burst, where
--- TCP's 128KB+128KB absorb the same burst without the client's send ever
--- blocking. This suite reaches its container over TCP, so the scenario
--- scales the burst until the TCP path saturates the same way: 1000
--- commands of ~2KB each (~2.2MB on the wire, extended-protocol framing
--- included) against the ~300-400KB of combined kernel buffering on the way
--- to the container. Each command
--- returns an ~8KB result, so after a few dozen commands the server is
--- blocked writing while the client still has megabytes unsent - the deadlock
--- is forced by buffer arithmetic, not by timing.
+-- TCP's larger buffers absorb the same burst without the client's send ever
+-- blocking.
+--
+-- Why the burst is as large as it is: this suite reaches its container
+-- through Docker's published-port forwarding, and on a workstation that
+-- path buffers far more than the raw socket buffers - measured on this
+-- platform (macOS host, Docker Desktop), ~8.5MB of commands are accepted
+-- with the server never reading (send-buffer autotuning plus the
+-- forwarder's own buffering), and ~5.4MB of results are accepted with the
+-- client never reading (receive-buffer autotuning capped at 4MB plus the
+-- forwarder's buffering). A direct kernel route (a Linux CI host, a Unix
+-- socket) exposes only the true socket buffers, an order of magnitude less.
+-- The scenario therefore sends 1000 commands of ~32KB each - ~32MB of wire
+-- traffic, more than double the sum of both directions' absorption even on
+-- the forwarding path - with each command returning an ~32KB result, so
+-- output expands to roughly the size of the input. By buffer arithmetic the
+-- server's output path fills while it has consumed only a fraction of the
+-- burst, and the client cannot finish sending unless the server consumes
+-- several more MB, which it cannot do while the client reads nothing: both
+-- sides are guaranteed stuck, whatever the platform's capacities are below
+-- the burst's.
 --
 -- Why this observation: the failure mode is a hang, not a wrong value, and a
 -- hung candidate must fail the spec rather than stall the whole suite. The
@@ -67,20 +79,22 @@ import Pqi.Conformance.Harness
 import Pqi.Conformance.Prelude
 import Test.Hspec
 
--- | The payload each command carries: 2KB, so a command is ~2.2KB on the
--- wire (extended-protocol framing included) while returning an ~8KB result -
--- output expands ~4x over input.
+-- | The payload each command carries: 32KB, so a command is ~32KB on the
+-- wire (extended-protocol framing included) and returns an ~32KB result -
+-- output expands to roughly the size of the input, so the server's output
+-- path fills while it has consumed only a small fraction of the burst.
 statementLiteral :: ByteString
-statementLiteral = ByteString.Char8.replicate 2048 'x'
+statementLiteral = ByteString.Char8.replicate 32768 'x'
 
 statement :: ByteString
-statement = "select repeat('" <> statementLiteral <> "', 4)"
+statement = "select repeat('" <> statementLiteral <> "', 1)"
 
--- | 1000 commands, ~2.2MB of wire traffic in all - far more than the client's
--- send buffer and the server's receive buffer hold together (~300-400KB over
--- the container's TCP link), so the client cannot finish sending unless the
--- server keeps reading, which it cannot do unless the client keeps draining
--- results.
+-- | 1000 commands, ~32MB of wire traffic in all - more than double what the
+-- container's forwarding path can absorb in /both/ directions combined on a
+-- workstation (measured ~8.5MB of unread input, ~5.4MB of unread output),
+-- and far more than a direct kernel route can (~0.4MB). The client cannot
+-- finish sending unless the server keeps reading, which it cannot do unless
+-- the client keeps draining results.
 commandCount :: Int
 commandCount = 1000
 
