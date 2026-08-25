@@ -8,8 +8,8 @@ where
 import qualified Pqi
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
-import Pqi.Conformance.Prelude
 import qualified Pqi.Conformance.Operation.SendQueryParams.PipelineFlowControl as PipelineFlowControl
+import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (drainResults, execScenario, int4Oid, takeCommandResults, takeResult)
 import Test.Hspec
 

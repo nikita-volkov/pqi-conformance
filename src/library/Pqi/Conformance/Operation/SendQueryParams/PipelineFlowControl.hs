@@ -168,7 +168,8 @@ withDeadline micros action = do
     Concurrent.forkIO
       ( void
           ( Exception.try @Exception.SomeException action
-              >>= deliver . either (Left . show) Right
+              >>= deliver
+              . either (Left . show) Right
           )
       )
   timer <-
