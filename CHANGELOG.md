@@ -1,3 +1,9 @@
+# v1.0.15.0
+
+## Non-breaking
+
+- Added a `connectdb` spec covering a conninfo that gives an unresolvable `host` together with a `hostaddr` that is reachable (a loopback proxy in front of the container). `libpq` connects to the `hostaddr` and never resolves the `host`, and still reports the name from `host`. Found `pqi-native` never reads `hostaddr`: it resolves `host` through DNS regardless, so the connection fails, and the key is passed on in the startup packet as if it were a server setting. Found via `pqi-native` issue #11.
+
 # v1.0.14.0
 
 ## Non-breaking

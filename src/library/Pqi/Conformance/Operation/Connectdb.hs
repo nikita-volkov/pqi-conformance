@@ -15,6 +15,7 @@ import qualified Pqi
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
 import qualified Pqi.Conformance.Operation.Connectdb.HandshakeReset as HandshakeReset
+import qualified Pqi.Conformance.Operation.Connectdb.Hostaddr as Hostaddr
 import qualified Pqi.Conformance.Operation.Connectdb.MissingUnixSocketDirectory as MissingUnixSocketDirectory
 import qualified Pqi.Conformance.Operation.Connectdb.Rejection as Rejection
 import qualified Pqi.Conformance.Operation.Connectdb.UnixSocketUri as UnixSocketUri
@@ -31,6 +32,7 @@ spec adapter = do
   MissingUnixSocketDirectory.spec adapter
   UnresolvableHost.spec adapter
   HandshakeReset.spec adapter
+  Hostaddr.spec adapter
 
   describe "connectdb" do
     it "opens a usable connection" \conninfo ->
