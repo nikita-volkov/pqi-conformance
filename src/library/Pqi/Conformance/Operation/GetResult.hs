@@ -7,12 +7,15 @@ where
 
 import qualified Pqi
 import Pqi.Conformance.Harness
+import qualified Pqi.Conformance.Operation.GetResult.LostConnection as LostConnection
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario (takeResult)
 import Test.Hspec
 
 spec :: Pqi.Adapter -> SpecWith ByteString
-spec adapter =
+spec adapter = do
+  LostConnection.spec adapter
+
   describe "getResult" do
     it "yields each result then a Nothing terminator" \conninfo ->
       differential adapter conninfo \connection -> do

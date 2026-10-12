@@ -8,6 +8,7 @@ where
 import qualified Pqi
 import Pqi.Conformance.Harness
 import qualified Pqi.Conformance.Operation.Exec.ConnectionLostMidQuery as ConnectionLostMidQuery
+import qualified Pqi.Conformance.Operation.Exec.LostConnection as LostConnection
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario
 import Test.Hspec
@@ -15,6 +16,7 @@ import Test.Hspec
 spec :: Pqi.Adapter -> SpecWith ByteString
 spec adapter = do
   ConnectionLostMidQuery.spec adapter
+  LostConnection.spec adapter
 
   describe "exec" do
     let forCase title sql =

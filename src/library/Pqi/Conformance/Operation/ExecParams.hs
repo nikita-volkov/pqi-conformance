@@ -9,12 +9,15 @@ where
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
+import qualified Pqi.Conformance.Operation.ExecParams.LostConnection as LostConnection
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario
 import Test.Hspec
 
 spec :: Lq.Adapter -> SpecWith ByteString
-spec adapter =
+spec adapter = do
+  LostConnection.spec adapter
+
   describe "execParams" do
     it "text result format" \conninfo ->
       differential adapter conninfo (paramsScenario Lq.Text)
