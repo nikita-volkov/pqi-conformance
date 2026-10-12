@@ -209,18 +209,29 @@ collect collection connection = go 1 False
       _ -> False
 
 -- | The same handle, used again: a new command, then what the connection
--- says about itself.
+-- says about itself. Besides @status@ and @errorMessage@ that is every piece
+-- of connection state that a lost connection leaves a caller to read:
+-- @transactionStatus@, @pipelineStatus@, @isBusy@ and whether there is still
+-- a @socket@ (its number is not compared: it differs between adapters).
 reuse :: Pqi.Connection -> IO [String]
 reuse connection = do
   sent <- bounded (Pqi.sendQuery connection "select 1")
   message <- bounded (Pqi.errorMessage connection)
   result <- bounded (Pqi.getResult connection >>= traverse observeResult)
   status <- bounded (Pqi.status connection)
+  transactionStatus <- bounded (Pqi.transactionStatus connection)
+  pipelineStatus <- bounded (Pqi.pipelineStatus connection)
+  busy <- bounded (Pqi.isBusy connection)
+  socket <- bounded (Pqi.socket connection)
   pure
     [ "afterwards, sendQuery: " <> renderCall show sent,
       "afterwards, errorMessage: " <> renderCall show message,
       "afterwards, getResult: " <> renderCall renderMaybeResult result,
-      "afterwards, status: " <> renderCall show status
+      "afterwards, status: " <> renderCall show status,
+      "afterwards, transactionStatus: " <> renderCall show transactionStatus,
+      "afterwards, pipelineStatus: " <> renderCall show pipelineStatus,
+      "afterwards, isBusy: " <> renderCall show busy,
+      "afterwards, socket: " <> renderCall (show . fmap (const ())) socket
     ]
 
 -- | What the victim saw, one line per observation.

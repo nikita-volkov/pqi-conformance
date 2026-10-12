@@ -1,3 +1,9 @@
+# v1.0.14.0
+
+## Non-breaking
+
+- Extended the lost-connection scenario (`getResult`, `exec` and `execParams`) to observe the rest of the connection state that a caller reads after the loss: `transactionStatus`, `pipelineStatus`, `isBusy` and whether `socket` is still there. Found `pqi-native` diverging in two of them in every cell: `transactionStatus` stayed `TransIdle` (or whatever the last `ReadyForQuery` said) where `libpq`'s `PQtransactionStatus` reports `PQTRANS_UNKNOWN` for any connection that is not `CONNECTION_OK`, and `socket` returned the number of the closed descriptor (`Just (-1)`) where `PQsocket` returns `-1` once `pqDropConnection` has closed it, i.e. `Nothing`. `pipelineStatus` and `isBusy` agree: `libpq` leaves the pipeline status as it was and `PQisBusy` is `False` once the asynchronous status is back at idle. Only whether the socket is present is compared, not its number, which differs between adapters.
+
 # v1.0.13.0
 
 ## Non-breaking
