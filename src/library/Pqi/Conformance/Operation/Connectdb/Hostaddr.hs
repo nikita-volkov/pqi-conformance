@@ -1,4 +1,5 @@
--- | Coverage for a conninfo that gives both @host@ and @hostaddr@.
+-- | Coverage for a conninfo that gives both @host@ and @hostaddr@, in the
+-- @keyword=value@ form and in the URI form (@?hostaddr=…@).
 --
 -- Per libpq's documentation
 -- (<https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNECT-HOSTADDR>),
@@ -22,11 +23,16 @@
 -- together with the parsed host. The status carries the divergence. The host
 -- pins that the name is still what 'Pqi.host' reports, as @libpq@ does, so a
 -- fix that simply replaced @host@ with @hostaddr@ would be caught.
+--
+-- The URI form is its own example because @pqi-native@ parses a URI's query
+-- through a separate code path, where a fix to the @keyword=value@ one does
+-- not reach.
 module Pqi.Conformance.Operation.Connectdb.Hostaddr
   ( spec,
   )
 where
 
+import qualified Data.ByteString.Char8 as ByteString.Char8
 import qualified Pqi
 import Pqi.Conformance.Fixture.ConnectionLoss (withProxy)
 import Pqi.Conformance.Harness
@@ -39,13 +45,32 @@ spec adapter =
     describe "a conninfo with an unresolvable host and a hostaddr" do
       it "connects to the hostaddr without resolving the host, like the reference" \conninfo ->
         differentialConnect adapter conninfo \adapter' conninfo' ->
-          withProxy conninfo' \proxiedConninfo _ -> do
+          withProxy conninfo' \proxiedConninfo _ ->
             -- Later keywords win, so these override the proxy's @host@.
-            connection <-
-              Pqi.connectdb
-                adapter'
-                (proxiedConninfo <> " host=nonexistent.invalid.host hostaddr=127.0.0.1")
-            observedStatus <- Pqi.status connection
-            observedHost <- Pqi.host connection
-            Pqi.finish connection
-            pure (observedStatus, observedHost)
+            observe adapter' (proxiedConninfo <> " host=nonexistent.invalid.host hostaddr=127.0.0.1")
+
+      it "does the same when given as a URI query parameter" \conninfo ->
+        differentialConnect adapter conninfo \adapter' conninfo' ->
+          withProxy conninfo' \proxiedConninfo _ ->
+            observe
+              adapter'
+              ( "postgresql://postgres@nonexistent.invalid.host:"
+                  <> proxyPort proxiedConninfo
+                  <> "/postgres?hostaddr=127.0.0.1"
+              )
+
+observe :: Pqi.Adapter -> ByteString -> IO (Pqi.ConnStatus, Maybe ByteString)
+observe adapter conninfo = do
+  connection <- Pqi.connectdb adapter conninfo
+  observedStatus <- Pqi.status connection
+  observedHost <- Pqi.host connection
+  Pqi.finish connection
+  pure (observedStatus, observedHost)
+
+-- | The port the proxy listens on: 'withProxy' appends it as the last
+-- keyword of the conninfo it hands out.
+proxyPort :: ByteString -> ByteString
+proxyPort conninfo =
+  case [value | token <- reverse (ByteString.Char8.words conninfo), Just value <- [ByteString.Char8.stripPrefix "port=" token]] of
+    value : _ -> value
+    [] -> error "proxyPort: no port in the proxied conninfo"
