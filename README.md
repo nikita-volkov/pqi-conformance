@@ -47,7 +47,7 @@ in full.
 The suite is organised as **one spec module per API operation**, under
 `Pqi.Conformance.Operation.*` - `...Operation.Exec`, `...Operation.ExecParams`,
 `...Operation.LoSeek`, `...Operation.Fnumber`, and so on, one for every public
-method of `Pqi.IsConnection`, `Pqi.IsResult`, and `Pqi.IsCancel`,
+function on `Pqi.Connection`, `Pqi.Result`, and `Pqi.Cancel`,
 plus the connection-independent `Adapter` fields `Pqi.unescapeBytea` and
 `Pqi.resStatus`. Each module holds the differential
 scenarios that exercise that one operation (its happy paths, its edge cases,
@@ -56,24 +56,23 @@ and its error paths). Shared scenario fragments live in
 
 ## Usage
 
-An adapter's own test suite is a one-liner - it hands `specs` a `Proxy` of its
-connection type and `specs` takes care of booting the container and running the
-whole battery (every operation, the coverage meta-test, and SCRAM):
+An adapter's own test suite is a one-liner - it hands `specs` its `Pqi.Adapter`
+value and `specs` takes care of booting the container and running the whole
+battery (every operation, the coverage meta-test, and SCRAM):
 
 ```haskell
 module Main (main) where
 
-import Data.Proxy (Proxy (..))
+import MyAdapter (adapter)
 import Pqi.Conformance (specs)
-import MyAdapter (MyConnection)
 import Test.Hspec (hspec)
 
 main :: IO ()
-main = hspec (specs (Proxy @MyConnection))
+main = hspec (specs adapter)
 ```
 
-`MyConnection` only needs a `Pqi.IsConnection` instance; the candidate and
-the `postgresql-libpq` reference are both driven through that interface.
+The candidate is driven entirely through the fields of its `Pqi.Adapter`
+value, the same way the `postgresql-libpq` reference is.
 
 ## Contributing
 
