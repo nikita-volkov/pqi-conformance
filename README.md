@@ -31,9 +31,9 @@ and are handled differently:
   independently for each adapter.
 - **`socket`** - the file descriptor of the client socket. Also
   connection-specific. Covered only by its own presence check.
-- **`Notify.bePid`** - the PID of the notifying backend. Since each adapter's
+- **`Notify.notifyBePid`** - the PID of the notifying backend. Since each adapter's
   connection has its own backend, cross-adapter comparison would always fail.
-  Instead, each adapter asserts independently that `notification.bePid ==
+  Instead, each adapter asserts independently that `notification.notifyBePid ==
   backendPID connection` (a within-connection assertion that verifies the PID
   field is correctly populated).
 
