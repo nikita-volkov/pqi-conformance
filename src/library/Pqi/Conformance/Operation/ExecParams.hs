@@ -9,6 +9,7 @@ where
 import qualified Pqi as Lq
 import Pqi.Conformance.Harness
 import Pqi.Conformance.Observation
+import qualified Pqi.Conformance.Operation.ExecParams.LargeField as LargeField
 import qualified Pqi.Conformance.Operation.ExecParams.LostConnection as LostConnection
 import Pqi.Conformance.Prelude
 import Pqi.Conformance.Scenario
@@ -16,6 +17,7 @@ import Test.Hspec
 
 spec :: Lq.Adapter -> SpecWith ByteString
 spec adapter = do
+  LargeField.spec adapter
   LostConnection.spec adapter
 
   describe "execParams" do
