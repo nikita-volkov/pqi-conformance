@@ -1,3 +1,7 @@
+# v1.0.16.1
+
+Doc corrections: the README and package description describe adapters as `Pqi.Adapter` values instead of `Pqi.IsConnection` instances, and use the `notifyBePid` field name.
+
 # v1.0.16.0
 
 ## Non-breaking
